@@ -13,7 +13,7 @@ using namespace std;
 class FixedHeapFileCreator : public FileCreator
 {
     public:
-        FixedHeapFileCreator(string fileName, string newFileName) : FileCreator (fileName, newFileName){};
+        FixedHeapFileCreator(string fileName, string newFileName);
         FixedHeapHeader header;
         int insertHeader();
         int insertRecords();

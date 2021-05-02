@@ -15,7 +15,6 @@ FileCreator::FileCreator(string rawfileName, string newFileName)
         return;
     }
     this->closeNewFile();
-    this->insertHeader();
 }
 
 int FileCreator::openRawFile ()
@@ -52,5 +51,19 @@ int FileCreator::openNewFileReading()
 int FileCreator::closeNewFile()
 {
     this->newFile.close();
+    return 0;
+}
+
+int FileCreator::addDict()
+{
+    string toWrite;
+    this->dictFile.open("filetypeDict.txt", fstream::out);
+    if (!this->dictFile.good())
+    {
+        return -1;
+    }
+    toWrite = this->newFileName + ":" + to_string(this->type);
+    this->dictFile << toWrite;
+    this->dictFile.close();
     return 0;
 }

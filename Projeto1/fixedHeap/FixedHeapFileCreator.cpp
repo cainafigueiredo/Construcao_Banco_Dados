@@ -1,5 +1,14 @@
 #include "FixedHeapFileCreator.h"
 
+
+FixedHeapFileCreator::FixedHeapFileCreator(string fileName, string newFileName) : FileCreator (fileName, newFileName)
+{
+    this->insertHeader();
+    this->type = FixedHeap;
+    this->addDict();
+    
+}
+
 int FixedHeapFileCreator::insertHeader()
 {
     if(this->openNewFileWriting() == -1)
@@ -18,10 +27,8 @@ int FixedHeapFileCreator::getHeader()
 {   
     this->openNewFileReading();
     this->newFile.seekg(0);
-    cout << "status: " << this->newFile << endl;
-    if (!this->newFile.read((char *) &(this->header), sizeof(this->header)))
+    if (!this->newFile.read((char *) &(this->header), this->header.headerSize))
     {
-        cout << "deu ruim \n ";
         this->closeNewFile();
         return -1;
     }
@@ -65,6 +72,7 @@ int FixedHeapFileCreator::insertRecords()
 {
     int firstDeleted;
     FixedRecord newRecord;
+    int numbers = 0;
 
     if (this->getHeader() == -1)
     {
@@ -74,7 +82,7 @@ int FixedHeapFileCreator::insertRecords()
     this->openNewFileWriting();
     while(this->readCsvLine(newRecord) == 0)
     {
-        cout << "new line  ";
+        newRecord.id = numbers++;
         this->newFile.write((char *) &newRecord, sizeof(newRecord));
         this->header.recordsAmount++;
     }   
