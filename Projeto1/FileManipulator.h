@@ -1,11 +1,13 @@
 #include <string>
+#include <iostream>
+
 using namespace std;
 
 
 class FileManipulator
 {
     public:
-        FileManipulator(fstream database);
+        FileManipulator();
         
         bool between (int attribute, int first, int last);
         bool unique (int attribute, string value);
