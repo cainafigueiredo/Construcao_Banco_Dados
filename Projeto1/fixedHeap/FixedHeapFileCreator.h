@@ -5,6 +5,7 @@
 #include <sstream>
 #include <forward_list>
 #include "../FileCreator.h"
+#include "./FixedRecord.h"
 #include "FixedHeapHeader.h"
 
 using namespace std;
