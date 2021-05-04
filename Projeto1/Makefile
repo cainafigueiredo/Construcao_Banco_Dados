@@ -12,7 +12,9 @@ LDFLAGS = -Wall
 
 AFLAGS = -r
 
-SOURCES = main.cpp FileCreator.cpp FixedRecord.cpp ./fixedHeap/FixedHeapFileCreator.cpp ./fixedHeap/FixedHeapHeader.cpp
+SOURCES = main.cpp FileCreator.cpp FixedRecord.cpp \
+								 ./fixedHeap/FixedHeapFileCreator.cpp \
+								 ./fixedHeap/FixedHeapHeader.cpp
 RESULTADO = resultado
 MAINOBJS = $(SOURCES:.c=.o)
 

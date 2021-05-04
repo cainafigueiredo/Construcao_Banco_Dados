@@ -1,15 +1,17 @@
+#ifndef __FILE_CREATOR__
+#define __FILE_CREATOR__
 #include <fstream>
 #include <string>
 #include <iostream>
 using namespace std;
 
-typedef enum {FixedHeap} fileType;
+typedef enum {FixedHeap, Ordered} fileType;
 
 class FileCreator
 {
     public:
         FileCreator(string rawfileName, string newFileName);
-        fstream rawDataFile, newFile, dictFile;
+        fstream rawDataFile, newFile, dictFile, schemaFile;
         string rawFileName, newFileName;
         fileType type;
         int openRawFile();
@@ -22,3 +24,4 @@ class FileCreator
         virtual int getHeader (){return 0;};
         virtual int readCsvLine(){return 0;};
 };
+#endif
