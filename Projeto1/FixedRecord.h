@@ -1,3 +1,6 @@
+#ifndef __FIXED_RECORD__
+#define __FIXED_RECORD__
+
 #include <string>
 
 #define MAX_STRING_SIZE  64
@@ -14,3 +17,4 @@ class FixedRecord
     int tipoesc, n_alunos;
     double cod_esc;
 };
+#endif
