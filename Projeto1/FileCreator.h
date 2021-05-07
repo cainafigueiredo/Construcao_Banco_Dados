@@ -11,13 +11,17 @@ class FileCreator
 {
     public:
         FileCreator(string rawfileName, string newFileName);
-        fstream rawDataFile, newFile, dictFile, schemaFile;
+        fstream dictFile, schemaFile;
+        fstream outNewFile;
+        ifstream inNewFile, rawDataFile;
         string rawFileName, newFileName;
         fileType type;
         int openRawFile();
+        int createNewFile();
         int openNewFileReading();
         int openNewFileWriting();
-        int closeNewFile();
+        int closeNewFileWriting();
+        int closeNewFileReading();
         int addDict();
         virtual int insertHeader (){return 0;};
         virtual int insertRecords (){return 0;};
