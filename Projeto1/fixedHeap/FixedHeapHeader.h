@@ -1,4 +1,8 @@
+#ifndef _FIXED_HEAP_HEADER_
+#define _FIXED_HEAP_HEADER_
+#include "../FixedRecord.h"
 #include "../FileHeader.h"
+
 
 using namespace std;
 
@@ -9,3 +13,5 @@ class FixedHeapHeader: public FileHeader
         int recordSize;
         forward_list<int> freeList;
 };
+
+#endif

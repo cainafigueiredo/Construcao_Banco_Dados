@@ -12,6 +12,7 @@ int FixedHeapFileCreator::insertHeader()
 {
     if(this->openNewFileWriting() == -1)
     {
+        this->closeNewFileWriting();
         cout << "Error opening the file for writing";
         return -1;
     }
@@ -43,25 +44,27 @@ int FixedHeapFileCreator::readCsvLine(FixedRecord &newRecord)
         return -1;
     }
 
-    stringstream ss(line);
+    newRecord.readCSVLine(line);
+
+    // stringstream ss(line);
     
-    getline(ss, newRecord.nomedep, ',');
-    ss.ignore();
-    getline(ss, newRecord.de, ',');
-    ss.ignore();
-    getline(ss, newRecord.distr, ',');
-    ss.ignore();
-    getline(ss, newRecord.mun, ',');
-    ss.ignore();
-    ss >> newRecord.tipoesc;
-    ss.ignore();
-    ss >> newRecord.cod_esc;
-    ss.ignore();
-    getline(ss, newRecord.nomesc, ',');
-    ss.ignore();
-    getline(ss, newRecord.ds_pais, ',');
-    ss.ignore();
-    ss >> newRecord.n_alunos;
+    // getline(ss, newRecord.nomedep, ',);
+    // ss.ignore();
+    // getline(ss, newRecord.de, ',');
+    // ss.ignore();
+    // getline(ss, newRecord.distr, ',');
+    // ss.ignore();
+    // getline(ss, newRecord.mun, ',');
+    // ss.ignore();
+    // ss >> newRecord.tipoesc;
+    // ss.ignore();
+    // ss >> newRecord.cod_esc;
+    // ss.ignore();
+    // getline(ss, newRecord.nomesc, ',');
+    // ss.ignore();
+    // getline(ss, newRecord.ds_pais, ',');
+    // ss.ignore();
+    // ss >> newRecord.n_alunos;
 
     return 0;
 }
@@ -86,10 +89,10 @@ int FixedHeapFileCreator::insertRecords()
         this->header.recordsAmount++;
     }
     // cout << endl;
-
+    this->closeRawFile();
     this->closeNewFileWriting();
     this->insertHeader();
-
+ 
     return 0;
 
 }

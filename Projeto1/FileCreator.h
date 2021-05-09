@@ -17,6 +17,7 @@ class FileCreator
         string rawFileName, newFileName;
         fileType type;
         int openRawFile();
+        int closeRawFile();
         int createNewFile();
         int openNewFileReading();
         int openNewFileWriting();

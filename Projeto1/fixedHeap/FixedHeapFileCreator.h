@@ -1,3 +1,6 @@
+#ifndef _FIXED_HEAP_FILE_CREATOR_
+#define _FIXED_HEAP_FILE_CREATOR_
+
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -15,6 +18,7 @@ class FixedHeapFileCreator : public FileCreator
 {
     public:
         FixedHeapFileCreator(string fileName, string newFileName);
+        ~FixedHeapFileCreator(){return;};
         FixedHeapHeader header;
         int insertHeader();
         int insertRecords();
@@ -22,3 +26,4 @@ class FixedHeapFileCreator : public FileCreator
         using FileCreator::readCsvLine;
         int readCsvLine(FixedRecord &newRecord);
 };
+#endif

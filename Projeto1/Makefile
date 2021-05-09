@@ -12,17 +12,17 @@ LDFLAGS = -Wall
 
 AFLAGS = -r
 
-SOURCES = main.cpp FileCreator.cpp FixedRecord.cpp \
+SOURCES = main.cpp FileCreator.cpp FixedRecord.cpp FileHeader.cpp FileManager.cpp FileManipulator.cpp \
 								 ./fixedHeap/FixedHeapFileCreator.cpp \
 								 ./fixedHeap/FixedHeapHeader.cpp
-RESULTADO = resultado
+MAIN = main
 MAINOBJS = $(SOURCES:.c=.o)
 
-EXECS = $(RESULTADO)
+EXECS = $(MAIN)
 
-ALL = $(RESULTADO)
+ALL = $(MAIN)
 
-$(RESULTADO) : $(MAINOBJS)
+$(MAIN) : $(MAINOBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:

@@ -27,6 +27,12 @@ int FileCreator::openRawFile ()
 
 }
 
+int FileCreator::closeRawFile ()
+{
+    this->rawDataFile.close();
+    return 0;
+}
+
 int FileCreator::createNewFile()
 {
     this->outNewFile.open(this->newFileName, ios::binary | ios::out);

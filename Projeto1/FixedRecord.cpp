@@ -1,11 +1,18 @@
 #include "FixedRecord.h"
 
-FixedRecord::FixedRecord ()
+int FixedRecord::readCSVLine(string line)
 {
-    this->nomedep.resize(MAX_STRING_SIZE);
-    this->de.resize(MAX_STRING_SIZE);
-    this->distr.resize(MAX_STRING_SIZE);
-    this->mun.resize(MAX_STRING_SIZE);
-    this->nomesc.resize(MAX_STRING_SIZE);
-    this->ds_pais.resize(MAX_STRING_SIZE);
+    char str[line.size()];
+    strcpy(str, line.c_str());
+    strcpy(this->nomedep, strtok(str, ","));
+    strcpy(this->de, strtok(NULL, ","));
+    strcpy(this->distr, strtok(NULL, ","));
+    strcpy(this->mun, strtok(NULL, ","));
+    this->tipoesc = strtoul(strtok(NULL, ","), NULL, 10);
+    this->cod_esc = strtod(strtok(NULL, ","), NULL);
+    strcpy(this->nomesc, strtok(NULL, ","));
+    strcpy(this->ds_pais, strtok(NULL, ","));
+    this->n_alunos = strtoul(strtok(NULL, "\0"), NULL, 10);
+
+    return 0;
 }

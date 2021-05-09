@@ -1,3 +1,5 @@
+#ifndef _FILE_MANIPULATOR_
+#define _FILE_MANIPULATOR_
 #include <string>
 #include <iostream>
 
@@ -18,3 +20,4 @@ class FileManipulator
         int select ();
         int deleteRecord ();
 };
+#endif

@@ -1,3 +1,5 @@
+#ifndef _FILE_MANAGER_
+#define _FILE_MANAGER_
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -24,3 +26,4 @@ class FileManager
 
         void info();
 };
+#endif
