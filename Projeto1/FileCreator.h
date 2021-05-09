@@ -15,7 +15,6 @@ class FileCreator
         fstream outNewFile;
         ifstream inNewFile, rawDataFile;
         string rawFileName, newFileName;
-        fileType type;
         int openRawFile();
         int closeRawFile();
         int createNewFile();
@@ -23,7 +22,6 @@ class FileCreator
         int openNewFileWriting();
         int closeNewFileWriting();
         int closeNewFileReading();
-        int addDict();
         virtual int insertHeader (){return 0;};
         virtual int insertRecords (){return 0;};
         virtual int getHeader (){return 0;};

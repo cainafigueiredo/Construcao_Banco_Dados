@@ -75,17 +75,3 @@ int FileCreator::closeNewFileReading()
     this->inNewFile.close();
     return 0;
 }
-
-int FileCreator::addDict()
-{
-    string toWrite;
-    this->dictFile.open("filetypeDict.txt", fstream::out);
-    if (!this->dictFile.good())
-    {
-        return -1;
-    }
-    toWrite = this->newFileName + ":" + to_string(this->type);
-    this->dictFile << toWrite;
-    this->dictFile.close();
-    return 0;
-}

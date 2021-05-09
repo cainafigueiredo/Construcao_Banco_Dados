@@ -16,3 +16,4 @@ int FixedRecord::readCSVLine(string line)
 
     return 0;
 }
+

@@ -4,8 +4,6 @@
 FixedHeapFileCreator::FixedHeapFileCreator(string fileName, string newFileName) : FileCreator (fileName, newFileName)
 {
     this->insertHeader();
-    this->type = FixedHeap;
-    this->addDict();
 }
 
 int FixedHeapFileCreator::insertHeader()
@@ -45,26 +43,6 @@ int FixedHeapFileCreator::readCsvLine(FixedRecord &newRecord)
     }
 
     newRecord.readCSVLine(line);
-
-    // stringstream ss(line);
-    
-    // getline(ss, newRecord.nomedep, ',);
-    // ss.ignore();
-    // getline(ss, newRecord.de, ',');
-    // ss.ignore();
-    // getline(ss, newRecord.distr, ',');
-    // ss.ignore();
-    // getline(ss, newRecord.mun, ',');
-    // ss.ignore();
-    // ss >> newRecord.tipoesc;
-    // ss.ignore();
-    // ss >> newRecord.cod_esc;
-    // ss.ignore();
-    // getline(ss, newRecord.nomesc, ',');
-    // ss.ignore();
-    // getline(ss, newRecord.ds_pais, ',');
-    // ss.ignore();
-    // ss >> newRecord.n_alunos;
 
     return 0;
 }
