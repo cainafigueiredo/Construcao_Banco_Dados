@@ -14,7 +14,8 @@ AFLAGS = -r
 
 SOURCES = main.cpp FileCreator.cpp FixedRecord.cpp FileHeader.cpp FileManager.cpp FileManipulator.cpp \
 								 ./fixedHeap/FixedHeapFileCreator.cpp \
-								 ./fixedHeap/FixedHeapHeader.cpp
+								 ./fixedHeap/FixedHeapHeader.cpp \
+								 ./fixedHeap/FixedHeapManipulator.cpp
 MAIN = main
 MAINOBJS = $(SOURCES:.c=.o)
 

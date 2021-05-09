@@ -1,7 +1,7 @@
 #include "FileManipulator.h"
 
-FileManipulator::FileManipulator(string filename) {
-	this->fileName = filename;
+FileManipulator::FileManipulator(string fileName) {
+	this->fileName = fileName;
 }
 
 int FileManipulator::openForReading()
@@ -34,4 +34,9 @@ int FileManipulator::closeForWriting()
 {
 	this->fileWrite.close();
 	return 0;
+}
+
+int FileManipulator::printSchema()
+{
+    cout << "id\tNOMEDEP\tDE\tDISTR\tMUN\tTIPOESC\tCOD_ESC\tNOMESC\tDS_PAIS\tN_ALUNOS\n";
 }
