@@ -11,6 +11,6 @@ int main ()
     FixedHeapFileCreator a ("teste.csv", "newFile_teste");
     a.insertRecords();
     FixedHeapManipulator teste("newFile_teste");
-    teste.findWhereEqual("N_ALUNOS", 1);
+    teste.findWhereBetween("id", 2, 5);
     return 0;
 }

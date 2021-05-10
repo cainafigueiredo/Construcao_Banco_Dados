@@ -2,6 +2,7 @@
 #define _FIXED_HEAP_MANIPULATOR_
 
 #include <vector>
+#include <cstring>
 #include "../FileManipulator.h"
 #include "FixedHeapHeader.h"
 #include "../FixedRecord.h"
@@ -16,6 +17,8 @@ class FixedHeapManipulator : public FileManipulator
         int findWhereEqual(string attribute, int value);
         int findWhereEqual(string attribute, double value);
         int findWhereEqual(string attribute, string value);
+        int findWhereBetween (string attribute, int value1, int value2);
+        int findWhereBetween (string attribute, double value1, double value2);
 
 };
 #endif

@@ -39,11 +39,13 @@ class FileManipulator
         int closeForReading();
         int closeForWriting();
 
-        int printSchema();
+        void printSchema();
         virtual int findOne(int id){return 0;};
         virtual int findWhereEqual(string attribute, int value){return 0;};
         virtual int findWhereEqual(string attribute, double value){return 0;};
         virtual int findWhereEqual(string attribute, string value){return 0;};
+        virtual int findWhereBetween (string attribute, int value1, int value2){return 0;};
+        virtual int findWhereBetween (string attribute, double value1, double value2){return 0;};
         // bool between (int attribute, int first, int last);
         // bool unique (int attribute, string value);
         // bool unique (int attribute, int value);

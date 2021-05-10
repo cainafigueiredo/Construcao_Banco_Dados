@@ -36,7 +36,7 @@ int FileManipulator::closeForWriting()
 	return 0;
 }
 
-int FileManipulator::printSchema()
+void FileManipulator::printSchema()
 {
     cout << "id\tNOMEDEP\tDE\tDISTR\tMUN\tTIPOESC\tCOD_ESC\tNOMESC\tDS_PAIS\tN_ALUNOS\n";
 }
