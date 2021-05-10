@@ -12,13 +12,21 @@ class FixedHeapManipulator : public FileManipulator
 {
     public:
         FixedHeapManipulator(string fileName) : FileManipulator(fileName){return;};
+        
         int printRecord(FixedRecord r);
+        int insertHeader(FixedHeapHeader head);
+        
+
         int findOne(int id);
         int findWhereEqual(string attribute, int value);
         int findWhereEqual(string attribute, double value);
         int findWhereEqual(string attribute, string value);
-        int findWhereBetween (string attribute, int value1, int value2);
-        int findWhereBetween (string attribute, double value1, double value2);
-
+        int findWhereBetween(string attribute, int value1, int value2);
+        int findWhereBetween(string attribute, double value1, double value2);
+        
+        int removeOne(int id);
+        int removeBetween(string attribute, int value1, int value2);
+        int removeBetween(string attribute, double value1, double value2);
+        int updateFreeListInsertDeleted (int offset, FixedHeapHeader head);
 };
 #endif

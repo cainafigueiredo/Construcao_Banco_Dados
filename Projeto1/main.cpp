@@ -9,8 +9,12 @@
 int main ()
 {
     FixedHeapFileCreator a ("teste.csv", "newFile_teste");
-    a.insertRecords();
     FixedHeapManipulator teste("newFile_teste");
-    teste.findWhereBetween("id", 2, 5);
+    a.insertRecords();
+    a.getHeader();
+    // cout << "FRONT: " << a.header.freeList<< endl;
+    teste.removeBetween("id", 0, 2);
+    teste.findWhereBetween("id", 0, 10);
+    teste.findWhereEqual("id", -1);
     return 0;
 }

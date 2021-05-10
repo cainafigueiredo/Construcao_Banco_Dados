@@ -16,3 +16,19 @@ int FixedRecord::readCSVLine(string line)
 
     return 0;
 }
+
+int FixedRecord::makeDeleted()
+{
+    this->id = -1;
+    this->tipoesc = -1;
+    this->n_alunos = -1;
+    this->cod_esc = -1.0;
+    strcpy(this->de, "DELETED");
+    strcpy(this->distr, "DELETED");
+    strcpy(this->ds_pais, "DELETED");
+    strcpy(this->mun, "DELETED");
+    strcpy(this->nomedep, "DELETED");
+    strcpy(this->nomesc, "DELETED");
+
+    return 0;
+}

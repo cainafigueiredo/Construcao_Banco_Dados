@@ -13,8 +13,12 @@ using namespace std;
 class FixedRecord
 {
     public:
+    
     FixedRecord(){return;};
+
     int readCSVLine(string line);
+    int makeDeleted();
+
     int id;
     char nomedep[MAX_STRING_SIZE], de[MAX_STRING_SIZE], distr[MAX_STRING_SIZE],
     mun[MAX_STRING_SIZE], nomesc[MAX_STRING_SIZE], ds_pais[MAX_STRING_SIZE];

@@ -6,7 +6,7 @@ FileManipulator::FileManipulator(string fileName) {
 
 int FileManipulator::openForReading()
 {
-	this->fileRead.open(this->fileName);
+	this->fileRead.open(this->fileName, fstream::in | fstream::binary);
 	if (!this->fileRead)
     {
         return -1;
@@ -16,7 +16,7 @@ int FileManipulator::openForReading()
 
 int FileManipulator::openForWriting()
 {
-	this->fileWrite.open(this->fileName);
+	this->fileWrite.open(this->fileName, fstream::binary | ios::out | ios::in);
 	if (!this->fileRead)
     {
         return -1;
