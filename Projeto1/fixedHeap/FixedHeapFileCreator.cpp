@@ -65,7 +65,7 @@ int FixedHeapFileCreator::insertRecords()
         this->outNewFile.write((char *) &newRecord, sizeof(newRecord));
         this->header.recordsAmount++;
     }
-    // cout << endl;
+    this->header.lastID = header.recordsAmount - 1;
     this->closeRawFile();
     this->closeNewFileWriting();
     this->insertHeader();

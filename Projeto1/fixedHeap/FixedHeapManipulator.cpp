@@ -559,6 +559,7 @@ int FixedHeapManipulator::insertOne(string record)
     FixedRecord newR;
     FixedHeapHeader head;
     int offset;
+    int acessedBlocks = 0;
 
     this->openForReading();
     this->fileRead.seekg(0, ios::beg);
@@ -567,6 +568,8 @@ int FixedHeapManipulator::insertOne(string record)
     
     /*botar o id*/
     newR.readCSVLine(record);
+    newR.id = head.lastID + 1;
+    head.lastID++;
     /*if there is a deleted space*/
     if (head.freeList != 0)
     {
@@ -574,6 +577,7 @@ int FixedHeapManipulator::insertOne(string record)
         this->openForReading();
         this->fileRead.seekg(head.freeList, ios::beg);
         this->fileRead.read( (char *) &auxRecord, sizeof(FixedRecord));
+        acessedBlocks++;
         this->closeForReading();
 
         this->openForWriting();
@@ -581,12 +585,13 @@ int FixedHeapManipulator::insertOne(string record)
         this->fileWrite.write((char *) &newR, sizeof(FixedRecord));
         head.freeList = auxRecord.n_alunos;
         this->closeForWriting();
-        head.recordsAmount++;
         this->insertHeader(head);
+
+        cout << "Accessed Blocks: " << acessedBlocks << endl;
         return 0;
     }
     
-    offset = head.recordsAmount * sizeof(FixedRecord) + sizeof(FixedHeapHeader);
+    offset = (head.recordsAmount * sizeof(FixedRecord)) + sizeof(FixedHeapHeader);
     this->openForWriting();
     this->fileWrite.seekp(offset, ios::beg);
     this->fileWrite.write((char *) &newR, sizeof(FixedRecord));
@@ -594,7 +599,8 @@ int FixedHeapManipulator::insertOne(string record)
     head.recordsAmount++;
     this->insertHeader(head);
 
-    return 0;;
+    cout << "Accessed Blocks: " << acessedBlocks << endl;
+    return 0;
 }
 
 int FixedHeapManipulator::insertMultiple(vector<string> inserts)
@@ -612,6 +618,7 @@ int FixedHeapManipulator::reorganize()
     FixedRecord record;
     FixedHeapHeader head;
     int recordCount = 0;
+    int accessedBlocks = 0;
 
     this->openForReading();
     this->fileRead.seekg(0, ios::beg);
@@ -639,7 +646,7 @@ int FixedHeapManipulator::reorganize()
             this->tempFile.write( (char *) &record, sizeof(FixedRecord));
             recordCount++;
         }
-
+        accessedBlocks++;
     }
     head.recordsAmount = recordCount;
     this->tempFile.seekp(0, ios::beg);
@@ -650,6 +657,8 @@ int FixedHeapManipulator::reorganize()
 
     remove (this->fileName.c_str());
     rename ((this->fileName + ".temp").c_str(), this->fileName.c_str());
+    
+    cout << "Accessed Blocks: " << accessedBlocks << endl;
     return 0;
 }
 
