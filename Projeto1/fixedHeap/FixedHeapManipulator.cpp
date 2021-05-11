@@ -549,7 +549,6 @@ int FixedHeapManipulator::updateFreeListInsertDeleted(int offset, FixedHeapHeade
     this->fileWrite.write( (char *) &deleted, sizeof(deleted));
     this->closeForWriting();
 
-    head.recordsAmount--;
     this->insertHeader(head);
     
     return 0;
@@ -612,7 +611,7 @@ int FixedHeapManipulator::reorganize()
 {
     FixedRecord record;
     FixedHeapHeader head;
-
+    int recordCount = 0;
 
     this->openForReading();
     this->fileRead.seekg(0, ios::beg);
@@ -625,8 +624,12 @@ int FixedHeapManipulator::reorganize()
     }
 
     this->createTempFile();
+    
     this->openTempFileWriting();
     this->openForReading();
+    
+    this->fileRead.seekg(sizeof(FixedHeapHeader), ios::beg);
+    this->tempFile.seekp(0, ios::beg);
     this->tempFile.write( (char *) &head, sizeof(FixedHeapHeader));
     for (int i = 0; i < head.recordsAmount; i++)
     {
@@ -634,14 +637,14 @@ int FixedHeapManipulator::reorganize()
         if (record.id != -1)
         {
             this->tempFile.write( (char *) &record, sizeof(FixedRecord));
+            recordCount++;
         }
-        else
-        {
-            head.recordsAmount--;
-        }
+
     }
+    head.recordsAmount = recordCount;
     this->tempFile.seekp(0, ios::beg);
     this->tempFile.write( (char *) &head, sizeof (FixedHeapHeader));
+    
     this->closeForReading();
     this->closeTempFileWriting();
 
