@@ -49,7 +49,6 @@ int FixedHeapFileCreator::readCsvLine(FixedRecord &newRecord)
 
 int FixedHeapFileCreator::insertRecords()
 {
-    int firstDeleted;
     FixedRecord newRecord;
     int numbers = 0;
 

@@ -445,7 +445,62 @@ int FixedHeapManipulator::removeBetween(string attribute, int value1, int value2
 
 int FixedHeapManipulator::removeBetween(string attribute, double value1, double value2)
 {
- return 0;   
+    FixedHeapHeader head;
+    FixedRecord record;
+    int attr;
+    int offset, auxOffset;
+    int numDeleted = 0;
+    int i = 0;
+    map<string, int> m = this->createMap();
+    attr = m[attribute];
+    
+    offset = sizeof(FixedHeapHeader);
+    auxOffset = offset;
+    do
+    {
+        this->openForReading();
+        this->fileRead.seekg(0, ios::beg);
+        this->fileRead.read((char *) &head, sizeof(head));
+        
+        this->fileRead.seekg(auxOffset, ios::beg);
+        this->fileRead.read((char *) &record, sizeof(FixedRecord));
+
+        auxOffset = this->fileRead.tellg();
+        
+        this->closeForReading();
+        switch (attr)
+        {
+            case 0: /*id*/
+                if (record.id >= value1 && record.id <= value2)
+                {
+                    this->updateFreeListInsertDeleted(offset, head);
+                    numDeleted++;
+                }
+                break;
+            case 5: /*tipoesc*/
+                if (record.tipoesc >= value1 && record.tipoesc <= value2)
+                {
+                    this->updateFreeListInsertDeleted(offset, head);
+                    numDeleted++;
+                }
+                break;
+            case 9: /*n_alunos*/
+                if (record.n_alunos >= value1 && record.n_alunos <= value2)
+                {
+                    this->updateFreeListInsertDeleted(offset, head);
+                    numDeleted++;
+                }
+                break;
+            default:
+                return -1;
+        }
+        offset += sizeof(FixedRecord);
+        i++;
+    }while (i < head.recordsAmount);
+
+    cout << "Rows deleted: " << numDeleted << endl;
+    
+    return 0;
 }
 
 int FixedHeapManipulator::updateFreeListInsertDeleted(int offset, FixedHeapHeader head)
@@ -494,7 +549,67 @@ int FixedHeapManipulator::updateFreeListInsertDeleted(int offset, FixedHeapHeade
     this->fileWrite.write( (char *) &deleted, sizeof(deleted));
     this->closeForWriting();
 
+    head.recordsAmount--;
     this->insertHeader(head);
+    
+    return 0;
+}
+
+int FixedHeapManipulator::insertOne(string record)
+{
+    FixedRecord newR;
+    FixedHeapHeader head;
+    int offset;
+
+    this->openForReading();
+    this->fileRead.seekg(0, ios::beg);
+    this->fileRead.read( (char *) &head, sizeof(head));
+    this->closeForReading();
+    
+    /*botar o id*/
+    newR.readCSVLine(record);
+    /*if there is a deleted space*/
+    if (head.freeList != 0)
+    {
+        FixedRecord auxRecord;
+        this->openForReading();
+        this->fileRead.seekg(head.freeList, ios::beg);
+        this->fileRead.read( (char *) &auxRecord, sizeof(FixedRecord));
+        this->closeForReading();
+
+        this->openForWriting();
+        this->fileWrite.seekp(head.freeList, ios::beg);
+        this->fileWrite.write((char *) &newR, sizeof(FixedRecord));
+        head.freeList = auxRecord.n_alunos;
+        this->closeForWriting();
+        head.recordsAmount++;
+        this->insertHeader(head);
+        return 0;
+    }
+    
+    offset = head.recordsAmount * sizeof(FixedRecord) + sizeof(FixedHeapHeader);
+    this->openForWriting();
+    this->fileWrite.seekp(offset, ios::beg);
+    this->fileWrite.write((char *) &newR, sizeof(FixedRecord));
+    this->closeForWriting();
+    head.recordsAmount++;
+    this->insertHeader(head);
+
+    return 0;;
+}
+
+int FixedHeapManipulator::insertMultiple(vector<string> inserts)
+{
+    for (auto const &record: inserts)
+    {
+        this->insertOne(record);
+    }
+
+    return 0;
+}
+
+int FixedHeapManipulator::reorganize()
+{
     
     return 0;
 }

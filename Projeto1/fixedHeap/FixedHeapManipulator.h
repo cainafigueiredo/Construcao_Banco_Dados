@@ -24,9 +24,15 @@ class FixedHeapManipulator : public FileManipulator
         int findWhereBetween(string attribute, int value1, int value2);
         int findWhereBetween(string attribute, double value1, double value2);
         
+        
         int removeOne(int id);
         int removeBetween(string attribute, int value1, int value2);
         int removeBetween(string attribute, double value1, double value2);
         int updateFreeListInsertDeleted (int offset, FixedHeapHeader head);
+
+        int insertOne(string record);
+        int insertMultiple(vector<string> inserts);
+
+        int reorganize(); 
 };
 #endif

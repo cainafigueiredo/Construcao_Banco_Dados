@@ -18,6 +18,7 @@ class FixedRecord
 
     int readCSVLine(string line);
     int makeDeleted();
+    int isDeleted();
 
     int id;
     char nomedep[MAX_STRING_SIZE], de[MAX_STRING_SIZE], distr[MAX_STRING_SIZE],
