@@ -610,6 +610,69 @@ int FixedHeapManipulator::insertMultiple(vector<string> inserts)
 
 int FixedHeapManipulator::reorganize()
 {
+    FixedRecord record;
+    FixedHeapHeader head;
+
+
+    this->openForReading();
+    this->fileRead.seekg(0, ios::beg);
+    this->fileRead.read((char *) &head, sizeof(FixedHeapHeader));
+    this->closeForReading();
     
+    if (head.freeList == 0)
+    {
+        return 0;
+    }
+
+    this->createTempFile();
+    this->openTempFileWriting();
+    this->openForReading();
+    this->tempFile.write( (char *) &head, sizeof(FixedHeapHeader));
+    for (int i = 0; i < head.recordsAmount; i++)
+    {
+        this->fileRead.read ( (char *) &record, sizeof(FixedRecord));
+        if (record.id != -1)
+        {
+            this->tempFile.write( (char *) &record, sizeof(FixedRecord));
+        }
+        else
+        {
+            head.recordsAmount--;
+        }
+    }
+    this->tempFile.seekp(0, ios::beg);
+    this->tempFile.write( (char *) &head, sizeof (FixedHeapHeader));
+    this->closeForReading();
+    this->closeTempFileWriting();
+
+    remove (this->fileName.c_str());
+    rename ((this->fileName + ".temp").c_str(), this->fileName.c_str());
+    return 0;
+}
+
+int FixedHeapManipulator::createTempFile()
+{
+    this->tempFile.open(this->fileName + ".temp", ios::binary | ios::out);
+    if (!this->tempFile.good())
+    {
+        return -1;
+    }
+    this->tempFile.close();
+    return 0;
+}
+
+int FixedHeapManipulator::openTempFileWriting()
+{
+    this->tempFile.open(this->fileName + ".temp", fstream::binary | ios::out | ios::in);
+    if (!this->tempFile.is_open())
+    {
+        return -1;
+    }
+    return 0;
+}
+
+int FixedHeapManipulator::closeTempFileWriting()
+{
+    this->tempFile.close();
     return 0;
 }

@@ -1,9 +1,12 @@
 #ifndef _FILE_MANIPULATOR_
 #define _FILE_MANIPULATOR_
+
+#include <vector>
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <map>
+
 using namespace std;
 
 
@@ -15,6 +18,8 @@ class FileManipulator
         string fileName;
         ifstream fileRead;
         ofstream fileWrite;
+
+        ofstream tempFile;
         
         static map<string, int> createMap()
         {
@@ -48,12 +53,13 @@ class FileManipulator
         virtual int findWhereBetween(string attribute, int value1, int value2){return 0;};
         virtual int findWhereBetween(string attribute, double value1, double value2){return 0;};
         virtual int removeOne(int id){return 0;};
-        // bool between (int attribute, int first, int last);
-        // bool unique (int attribute, string value);
-        // bool unique (int attribute, int value);
-        // bool unique (int attribute, double value);
-        // int findAll();
-        // int select ();
-        // int deleteRecord ();
+
+        virtual int insertOne(string record){return 0;};
+        virtual int insertMultiple(vector<string> inserts){return 0;};
+
+        virtual int reorganize(){return 0;};
+        virtual int createTempFile(){return 0;};
+        virtual int openTempFileWriting(){return 0;};
+        virtual int closeTempFileWriting(){return 0;};
 };
 #endif

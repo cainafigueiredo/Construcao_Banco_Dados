@@ -1,7 +1,6 @@
 #ifndef _FIXED_HEAP_MANIPULATOR_
 #define _FIXED_HEAP_MANIPULATOR_
 
-#include <vector>
 #include <cstring>
 #include "../FileManipulator.h"
 #include "FixedHeapHeader.h"
@@ -34,5 +33,8 @@ class FixedHeapManipulator : public FileManipulator
         int insertMultiple(vector<string> inserts);
 
         int reorganize(); 
+        int createTempFile();
+        int openTempFileWriting();
+        int closeTempFileWriting();
 };
 #endif

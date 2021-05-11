@@ -13,8 +13,11 @@ int main ()
     a.insertRecords();
     a.getHeader();
     // cout << "FRONT: " << a.header.freeList<< endl;
+
+    teste.findWhereBetween("id", 0, 12);
     teste.removeBetween("id", 0, 2);
-    teste.findWhereBetween("id", 0, 10);
-    teste.findWhereEqual("id", -1);
+    teste.findWhereBetween("id", 0, 12);
+    // teste.reorganize();
+    // teste.findWhereBetween("id", -1, 12);
     return 0;
 }
