@@ -171,46 +171,45 @@ int FixedHeapManipulator::findWhereEqual(string attribute, string value)
     for (i = 0; i < head.recordsAmount; i++)
     {
         this->fileRead.read((char *) &record, sizeof(FixedRecord));
-        cout << "attr: " << attr << " n_alunos: " << record.ds_pais << endl;
         switch (attr)
         {
             case 1: /*nomedep*/
-                if (string(record.nomedep).compare(value))
+                if (!string(record.nomedep).compare(value))
                 {
                     records.push_back(record);
                 }
                 found = true;
                 break;
             case 2: /*de*/
-                if (string(record.de).compare(value))
+                if (!string(record.de).compare(value))
                 {
                     records.push_back(record);
                 }
                 found = true;
                 break;
             case 3: /*distr*/
-                if (string(record.distr).compare(value))
+                if (!string(record.distr).compare(value))
                 {
                     records.push_back(record);
                 }
                 found = true;
                 break;
             case 4: /*mun*/
-                if (string (record.mun).compare(value))
+                if (!string (record.mun).compare(value))
                 {
                     records.push_back(record);
                 }
                 found = true;
                 break;
             case 7: /*nomesc*/
-                if (string (record.nomesc).compare(value))
+                if (!string (record.nomesc).compare(value))
                 {
                     records.push_back(record);
                 }
                 found = true;
                 break;
             case 8: /*ds_pais*/
-                if (string (record.ds_pais).compare(value) == 0)
+                if (!string (record.ds_pais).compare(value))
                 {
                     records.push_back(record);
                 }
