@@ -24,6 +24,6 @@ class HashFileCreator : public FileCreator
         int insertRecords();
         int getHeader();
         using FileCreator::readCsvLine;
-        int readCsvLine(FixedRecord &newRecord);
+        int readCsvLine(HashFixedRecord &newRecord);
 };
 #endif

@@ -9,7 +9,6 @@
 
 using namespace std;
 
-
 class FixedRecord
 {
     public:
@@ -25,4 +24,12 @@ class FixedRecord
     int tipoesc, n_alunos;
     double cod_esc;
 };
+
+class HashFixedRecord : public FixedRecord 
+{
+    public:
+        HashFixedRecord() : FixedRecord(){this->nextRecord = -1;};
+        int nextRecord;
+};
+
 #endif

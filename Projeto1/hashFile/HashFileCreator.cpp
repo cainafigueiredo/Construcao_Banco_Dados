@@ -34,7 +34,7 @@ int HashFileCreator::getHeader()
 }
 
 /*considers first line already has data.*/
-int HashFileCreator::readCsvLine(FixedRecord &newRecord)
+int HashFileCreator::readCsvLine(HashFixedRecord &newRecord)
 {
     string line;
     if (!getline(this->rawDataFile, line))
@@ -49,7 +49,7 @@ int HashFileCreator::readCsvLine(FixedRecord &newRecord)
 
 int HashFileCreator::insertRecords()
 {
-    FixedRecord newRecord;
+    HashFixedRecord newRecord;
     int numbers = 0;
     int bucket_id, block_addr, n_recordsInBlock, recordAddr;
 
