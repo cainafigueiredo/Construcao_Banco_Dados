@@ -1,16 +1,18 @@
 #ifndef __ORDERED_HEADER__
 #define __ORDERED_HEADER__
-#include <type_traits>
 #include <cstring>
 #include "../FixedRecord.h"
-
+#include "../FileCreator.h"
+#include "../FileHeader.h"
+#define MAX_ORDERED_FIELD_SIZE 128
 using namespace std;
 
-template <class T = int>
+template <class T = char[MAX_ORDERED_FIELD_SIZE]>
 class orderedHeader : public FileHeader 
 {
     public:
         orderedHeader(char* extension_filename, char* order_by);
+        orderedHeader();
         int headerSize;
         int recordSize;
         //lista encadeada que mantém a posicao (offset) de todos os registros que foram deletados
@@ -32,7 +34,18 @@ orderedHeader<T>::orderedHeader(char* extension_filename, char* order_by)
     this->recordSize = sizeof(FixedRecord);
     strcpy(this->extension_file,extension_filename);
     strcpy(this->ordered_by,order_by);
-    this->limitValue = T();
+    // this->limitValue = T();
+    this->recordsAmount = 0;
+    this->fileOrganization = Ordered;
+};
+
+
+template <class T>
+orderedHeader<T>::orderedHeader()
+{
+    this->headerSize = sizeof(*this);
+    this->recordSize = sizeof(FixedRecord);
+    // this->limitValue = T();
     this->recordsAmount = 0;
     this->fileOrganization = Ordered;
 };

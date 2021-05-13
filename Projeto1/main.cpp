@@ -5,17 +5,21 @@
 #include "fixedHeap/FixedHeapManipulator.h"
 #include "orderedFile/orderedHeader.h"
 #include "orderedFile/orderedFileCreator.h"
-
+#include "orderedFile/orderedManipulator.h"
 #include <iostream>
+
 
 int main ()
 {
     char fileName[MAX_STRING_SIZE] = "teste.csv";
     char newFileName[MAX_STRING_SIZE] = "newFile_teste";
     char orderField[MAX_STRING_SIZE] = "some_field";
-    orderedFileCreator<int> a (fileName, newFileName,orderField);
+    
+    orderedFileCreator<char[MAX_ORDERED_FIELD_SIZE]> a (fileName, newFileName,orderField);
+    orderedManipulator teste("newFile_teste");
     a.insertRecords();
     a.getHeader();
     a.printHeader();
+    teste.findOne(3);
     return 0;
 }
