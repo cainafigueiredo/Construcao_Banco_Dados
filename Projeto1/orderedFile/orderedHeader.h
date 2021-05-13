@@ -1,41 +1,40 @@
-#include <forward_list>
+#ifndef __ORDERED_HEADER__
+#define __ORDERED_HEADER__
 #include <type_traits>
-#include <string>
+#include <cstring>
 #include "../FixedRecord.h"
 
 using namespace std;
 
 template <class T = int>
-class orderedHeader
+class orderedHeader : public FileHeader 
 {
     public:
-        orderedHeader(string extension_filename = "newFile_teste_extension", string order_by = "nothing");
+        orderedHeader(char* extension_filename, char* order_by);
         int headerSize;
         int recordSize;
         //lista encadeada que mantém a posicao (offset) de todos os registros que foram deletados
-        forward_list<int> freeList;
+        int freeList;
         //nome do arquivo de extensão 
-        string extension_file;
+        char extension_file[MAX_STRING_SIZE];
         //nome do campo utilizado pela ordenacao
-        string ordered_by;
+        char ordered_by[MAX_STRING_SIZE];
         //valor do maior (menor) campo. Foi usado template pois pode ser string, int...
         T limitValue;
         int recordsAmount;
+        int lastID;
 };
 
 template <class T>
-orderedHeader<T>::orderedHeader(string extension_filename, string order_by)
+orderedHeader<T>::orderedHeader(char* extension_filename, char* order_by)
 {
-    extension_filename.resize(FILENAME_MAX);
-    order_by.resize(MAX_STRING_SIZE);
     this->headerSize = sizeof(*this);
     this->recordSize = sizeof(FixedRecord);
-    this->extension_file = extension_filename;
-    this->ordered_by = order_by;
+    strcpy(this->extension_file,extension_filename);
+    strcpy(this->ordered_by,order_by);
     this->limitValue = T();
-    // if(is_same<type(this->limitValue), string>)
-    // {
-    //     this->limitValue.resize(MAX_STRING_SIZE);    
-    // }
     this->recordsAmount = 0;
+    this->fileOrganization = Ordered;
 };
+
+#endif

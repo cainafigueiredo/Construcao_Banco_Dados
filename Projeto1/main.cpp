@@ -3,21 +3,19 @@
 #include "fixedHeap/FixedHeapFileCreator.h"
 #include "fixedHeap/FixedHeapHeader.h"
 #include "fixedHeap/FixedHeapManipulator.h"
+#include "orderedFile/orderedHeader.h"
+#include "orderedFile/orderedFileCreator.h"
 
 #include <iostream>
 
 int main ()
 {
-    FixedHeapFileCreator a ("teste.csv", "newFile_teste");
-    FixedHeapManipulator teste("newFile_teste");
+    char fileName[MAX_STRING_SIZE] = "teste.csv";
+    char newFileName[MAX_STRING_SIZE] = "newFile_teste";
+    char orderField[MAX_STRING_SIZE] = "some_field";
+    orderedFileCreator<int> a (fileName, newFileName,orderField);
     a.insertRecords();
     a.getHeader();
-    // cout << "FRONT: " << a.header.freeList<< endl;
-
-    teste.findWhereBetween("id", 0, 12);
-    teste.removeBetween("id", 0, 2);
-    teste.findWhereBetween("id", 0, 12);
-    // teste.reorganize();
-    // teste.findWhereBetween("id", -1, 12);
+    a.printHeader();
     return 0;
 }

@@ -7,8 +7,8 @@ AR = ar
 
 #linkedit
 DEBUG = -D _MY_DEBUG_
-CFLAGS = -Wall -g
-LDFLAGS = -Wall
+CFLAGS = -Wall -g -std=gnu++11
+LDFLAGS = -Wall -std=gnu++11
 
 AFLAGS = -r
 
