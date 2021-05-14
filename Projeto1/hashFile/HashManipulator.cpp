@@ -4,7 +4,7 @@ HashManipulator::HashManipulator(string fileName) : FileManipulator(fileName) {
     
 }
 
-int HashManipulator::printRecord(FixedRecord r)
+int HashManipulator::printRecord(HashFixedRecord r)
 {
     cout << r.id << "\t" << r.nomedep << "\t" << r.de << "\t" <<
     r.distr << "\t" << r.mun << "\t" << r.tipoesc << "\t" << 
@@ -23,37 +23,75 @@ int HashManipulator::insertHeader(HashHeader head)
 
 int HashManipulator::findOne(int id)
 {
-    FixedRecord record;
+    HashFixedRecord record;
     HashHeader head;
-    int bucket_id, block_addr, n_recordsInBlock, firstRecordAddr;
-    int blocksAccessed;
+    int bucket_id, block_addr, n_recordsInBucket, n_recordsInBlock, n_overflowRecords, recordAddr;
+    int blocksAccessed = 0;
     bool found = false;
     this->openForReading();
     this->fileRead.read((char *) &head, sizeof(head));
 
     bucket_id = head.hashFunction(id);
     block_addr = head.buckets[bucket_id].block_addr;
-    n_recordsInBlock = head.buckets[bucket_id].numberOfRecords;
-    firstRecordAddr = (block_addr * head.blockSize);
+    n_recordsInBucket = head.buckets[bucket_id].numberOfRecords;
+    n_overflowRecords = (n_recordsInBucket <= head.getBlockingFactor()) ? 0 : n_recordsInBucket % head.getBlockingFactor();
+    n_recordsInBlock = n_recordsInBucket - n_overflowRecords; 
 
-    this->fileRead.seekg(sizeof(head) + firstRecordAddr);
+    cout << "Records: " << n_recordsInBucket << "\n";
 
-    for (int i = 0; i < n_recordsInBlock; i++)
-    {
-        this->fileRead.read((char *) &record, sizeof(FixedRecord));
+    // Se houver registros no bloco do bucket, então comece a buscar entre eles.
+    if (n_recordsInBlock > 0) {
 
-        if (record.id == id)
-        {
-            blocksAccessed = i+1;
-            found = true;
-            break;
+        recordAddr = (block_addr * head.blockSize);
+        this->fileRead.seekg(sizeof(head) + recordAddr);
+
+        for (int i = 0; i < n_recordsInBlock; i++) {
+            // Procurando pelo registro no bloco mapeado pelo bucket.
+            this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
+            blocksAccessed++;
+
+            if (record.id == id) {
+                found = true;
+                break;
+            }
         }
     }
+
+    // Se houver registros de overflow no bucket, então comece a buscar entre eles.
+    if (n_overflowRecords > 0 && !found) {
+        int overflow_record_block_addr = head.buckets[bucket_id].overflow.first_block_addr;
+        int overflow_record_block_offset = head.buckets[bucket_id].overflow.first_block_offset;
+        cout << overflow_record_block_addr << " , " << overflow_record_block_offset << "\n";  
+        while (overflow_record_block_addr > 0) {
+            // Carrega o próximo registro de overflow.
+            recordAddr = (overflow_record_block_addr * head.blockSize + overflow_record_block_offset * sizeof(HashFixedRecord));
+            cout << record.nomedep << "\n";
+            cout << "\n\n" << recordAddr << "\n\n";
+            this->fileRead.seekg(sizeof(head) + recordAddr);
+            this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
+            cout << "\n\n" << record.nextRecord_block_addr << " , " << record.nextRecord_block_offset << "\n\n";
+            blocksAccessed++;
+            
+            // Verificando se o registro é o que estamos procurando.
+            if (record.id == id) {
+                found = true;
+                break;
+            }
+
+            // Carregando o próximo registro da lista de overflows.
+            overflow_record_block_addr = record.nextRecord_block_addr;
+            overflow_record_block_offset = record.nextRecord_block_offset;
+            cout << overflow_record_block_addr << " , " << overflow_record_block_offset << "\n";  
+
+        };
+    }  
+    
 
     if (!found)
     {
         return -1;
     }
+
     this->printSchema();
     this->printRecord(record);
     cout << "Blocks Acessed: " << blocksAccessed << endl;
@@ -64,9 +102,9 @@ int HashManipulator::findOne(int id)
 
 int HashManipulator::findWhereEqual(string attribute, int value)
 {
-    FixedRecord record;
+    HashFixedRecord record;
     HashHeader head;
-    vector<FixedRecord> records;
+    vector<HashFixedRecord> records;
     int attr, blocksAccessed,  i;
     bool found = false;
     map<string, int> m = this->createMap();
@@ -87,7 +125,7 @@ int HashManipulator::findWhereEqual(string attribute, int value)
         this->fileRead.seekg(sizeof(head) + firstRecordAddr);
 
         for (int i = 0; i < n_recordsInBlock; i++) {
-            this->fileRead.read((char *) &record, sizeof(FixedRecord));
+            this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
             blocksAccessed++;
 
             switch (attr)
@@ -137,9 +175,9 @@ int HashManipulator::findWhereEqual(string attribute, int value)
 
 int HashManipulator::findWhereEqual(string attribute, double value)
 {
-    FixedRecord record;
+    HashFixedRecord record;
     HashHeader head;
-    vector<FixedRecord> records;
+    vector<HashFixedRecord> records;
     int attr, blocksAccessed, i;
     bool found = false;
     map<string, int> m = this->createMap();
@@ -160,7 +198,7 @@ int HashManipulator::findWhereEqual(string attribute, double value)
         this->fileRead.seekg(sizeof(head) + firstRecordAddr);
 
         for (int i = 0; i < n_recordsInBlock; i++) {
-            this->fileRead.read((char *) &record, sizeof(FixedRecord));
+            this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
             blocksAccessed++;
 
             switch (attr)
@@ -197,9 +235,9 @@ int HashManipulator::findWhereEqual(string attribute, double value)
 }
 int HashManipulator::findWhereEqual(string attribute, string value)
 {
-    FixedRecord record;
+    HashFixedRecord record;
     HashHeader head;
-    vector<FixedRecord> records;
+    vector<HashFixedRecord> records;
     int attr, blocksAccessed, i;
     bool found = false;
     map<string, int> m = this->createMap();
@@ -220,7 +258,7 @@ int HashManipulator::findWhereEqual(string attribute, string value)
         this->fileRead.seekg(sizeof(head) + firstRecordAddr);
 
         for (int i = 0; i < n_recordsInBlock; i++) {
-            this->fileRead.read((char *) &record, sizeof(FixedRecord));
+            this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
             blocksAccessed++;
 
             switch (attr)
@@ -292,9 +330,9 @@ int HashManipulator::findWhereEqual(string attribute, string value)
 
 int HashManipulator::findWhereBetween (string attribute, int value1, int value2)
 {
-    FixedRecord record;
+    HashFixedRecord record;
     HashHeader head;
-    vector<FixedRecord> records;
+    vector<HashFixedRecord> records;
     int attr, blocksAccessed, i;
     bool found = false;
     map<string, int> m = this->createMap();
@@ -304,7 +342,7 @@ int HashManipulator::findWhereBetween (string attribute, int value1, int value2)
     this->fileRead.read((char *) &head, sizeof(head));
     for (i = 0; i < head.recordsAmount; i++)
     {
-        this->fileRead.read((char *) &record, sizeof(FixedRecord));
+        this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
         switch (attr)
         {
             case 0: /*id*/
@@ -354,9 +392,9 @@ int HashManipulator::findWhereBetween (string attribute, int value1, int value2)
 
 int HashManipulator::findWhereBetween (string attribute, double value1, double value2)
 {
-    FixedRecord record;
+    HashFixedRecord record;
     HashHeader head;
-    vector<FixedRecord> records;
+    vector<HashFixedRecord> records;
     int attr, blocksAccessed, i;
     bool found = false;
     map<string, int> m = this->createMap();
@@ -366,7 +404,7 @@ int HashManipulator::findWhereBetween (string attribute, double value1, double v
     this->fileRead.read((char *) &head, sizeof(head));
     for (i = 0; i < head.recordsAmount; i++)
     {
-        this->fileRead.read((char *) &record, sizeof(FixedRecord));
+        this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
         switch (attr)
         {
             case 6: /*cod_esc*/
@@ -403,7 +441,7 @@ int HashManipulator::findWhereBetween (string attribute, double value1, double v
 int HashManipulator::removeOne(int id)
 {
     HashHeader head;
-    FixedRecord record;
+    HashFixedRecord record;
     bool found = false;
     int i;
     int offset = 0;
@@ -414,13 +452,13 @@ int HashManipulator::removeOne(int id)
     offset += sizeof(head);
     for (i = 0; i < head.recordsAmount; i++)
     {
-        this->fileRead.read((char *) &record, sizeof(FixedRecord));
+        this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
         if (record.id == id)
         {
             found = true;
             break;
         }
-        offset += sizeof(FixedRecord);
+        offset += sizeof(HashFixedRecord);
     }
 
     if (!found)
@@ -436,7 +474,7 @@ int HashManipulator::removeOne(int id)
 int HashManipulator::removeBetween(string attribute, int value1, int value2)
 {
     HashHeader head;
-    FixedRecord record;
+    HashFixedRecord record;
     int attr;
     int offset, auxOffset;
     int numDeleted = 0;
@@ -453,7 +491,7 @@ int HashManipulator::removeBetween(string attribute, int value1, int value2)
         this->fileRead.read((char *) &head, sizeof(head));
         
         this->fileRead.seekg(auxOffset, ios::beg);
-        this->fileRead.read((char *) &record, sizeof(FixedRecord));
+        this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
 
         auxOffset = this->fileRead.tellg();
         
@@ -484,7 +522,7 @@ int HashManipulator::removeBetween(string attribute, int value1, int value2)
             default:
                 return -1;
         }
-        offset += sizeof(FixedRecord);
+        offset += sizeof(HashFixedRecord);
         i++;
     }while (i < head.recordsAmount);
 
@@ -500,8 +538,8 @@ int HashManipulator::removeBetween(string attribute, double value1, double value
 
 int HashManipulator::updateFreeListInsertDeleted(int offset, HashHeader head)
 {
-    FixedRecord deleted;
-    FixedRecord record;
+    HashFixedRecord deleted;
+    HashFixedRecord record;
 
     int auxOffset;
     deleted.makeDeleted();
@@ -519,14 +557,14 @@ int HashManipulator::updateFreeListInsertDeleted(int offset, HashHeader head)
         do
         {
             this->fileRead.seekg(auxOffset, ios::beg);
-            this->fileRead.read((char *) &record, sizeof(FixedRecord));
+            this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
             auxOffset = record.n_alunos;
         } while (record.n_alunos != -1);
         record.n_alunos = offset;
         
         /*get the position of the last record in the list, to overwrite it
         with the new n_alunos info*/
-        this->fileRead.seekg(-sizeof(FixedRecord), ios::cur);
+        this->fileRead.seekg(-sizeof(HashFixedRecord), ios::cur);
         auxOffset = this->fileRead.tellg();
         this->closeForReading();
         

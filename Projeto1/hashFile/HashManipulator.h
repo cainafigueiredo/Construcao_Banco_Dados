@@ -5,8 +5,7 @@
 
 #include "../FileManipulator.h"
 #include "HashHeader.h"
-#include "../FixedRecord.h"
-#include <iostream>
+#include "./HashFixedRecord.h"
 
 using namespace std;
 
@@ -15,7 +14,7 @@ class HashManipulator : public FileManipulator
     public:
         HashManipulator(string fileName);
         
-        int printRecord(FixedRecord r);
+        int printRecord(HashFixedRecord r);
         int insertHeader(HashHeader head);
         
 

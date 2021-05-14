@@ -1,10 +1,10 @@
 #ifndef HASH_HEADER_
 #define HASH_HEADER_
-#include "../FixedRecord.h"
+#include "./HashFixedRecord.h"
 #include "../FileHeader.h"
 #include "./Bucket.h"
 
-#define NUMBER_OF_BUCKETS 2
+#define NUMBER_OF_BUCKETS 10
 
 using namespace std;
 

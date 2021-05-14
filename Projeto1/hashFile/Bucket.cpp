@@ -5,6 +5,7 @@ Bucket::Bucket() {
 	this->overflow.first_block_offset = -1;
 	this->overflow.last_block_addr = -1;
 	this->overflow.last_block_offset = -1;
+	setNumberOfRecords(0);
 };
 
 void Bucket::setBlockAddr(int block_addr) {

@@ -95,15 +95,15 @@ int HashFileCreator::insertRecords()
         block_addr = this->header.buckets[bucket_id].block_addr;
         n_recordsInBlock = this->header.buckets[bucket_id].numberOfRecords;
 
-        // Investigando se houve overflow de registros dentro do bloco. Em caso afirmativo,
-        // a inserção é feita na lista de registros de overflow. Caso contrário, a inserção 
-        // é feita na próxima posição livre do bloco.
-        if (n_recordsInBlock >= this->header.getBlockingFactor()) {
+        // Investigando se com a inserção haverá overflow de registros dentro do bloco. 
+        // Em caso afirmativo, a inserção é feita na lista de registros de overflow. 
+        // Caso contrário, a inserção é feita na próxima posição livre do bloco.
+        if ((n_recordsInBlock+1)*this->header.recordSize >= this->header.blockSize) {
             // Se chegou aqui, é porque o registro precisa ser inserido na lista de overflow.
             // Na verdade, o registro é inserido na primeira posição livre dentre os blocos que
             // não são mapeados pelos buckets.
-            overflow_block_addr = (NUMBER_OF_BUCKETS) + (this->header.numberOfOverflowRecords/ this->header.blockSize);
-            overflow_block_offset = this->header.numberOfOverflowRecords % this->header.blockSize;
+            overflow_block_addr = (NUMBER_OF_BUCKETS) + (this->header.numberOfOverflowRecords / this->header.getBlockingFactor());
+            overflow_block_offset = this->header.numberOfOverflowRecords % this->header.getBlockingFactor();
             
             recordAddr = (overflow_block_addr * this->header.blockSize) + (overflow_block_offset * sizeof(newRecord));
 
@@ -136,6 +136,8 @@ int HashFileCreator::insertRecords()
 
                 closeNewFileReading();
 
+                cout << "Next record: " << tempRecord.nextRecord_block_addr << " , " << tempRecord.nextRecord_block_offset << "\n";
+
                 openNewFileWriting();
 
                 this->outNewFile.seekp(sizeof(this->header) + last_overflow_addr, ios::beg);
@@ -165,6 +167,7 @@ int HashFileCreator::insertRecords()
         this->header.incrementRecordsAmount();
         this->header.buckets[bucket_id].incrementNumberOfRecords();
     }
+    cout << "Number of records: " << this->header.recordsAmount << "\n";
     // cout << endl;
     this->closeRawFile();
     this->closeNewFileWriting();

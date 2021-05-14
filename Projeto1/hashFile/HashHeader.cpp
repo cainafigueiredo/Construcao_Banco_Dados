@@ -4,7 +4,7 @@ HashHeader::HashHeader()
 {
     this->headerSize = sizeof(*this);
     this->fileOrganization = 3; // 3 means Hash; ...
-    this->recordSize = sizeof(FixedRecord);
+    this->recordSize = sizeof(HashFixedRecord);
 
     for (int i = 0; i < NUMBER_OF_BUCKETS; i++) {
         this->buckets[i].setBlockAddr(i);
