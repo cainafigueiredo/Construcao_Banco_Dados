@@ -37,7 +37,7 @@ int HashManipulator::findOne(int id)
     n_overflowRecords = (n_recordsInBucket <= head.getBlockingFactor()) ? 0 : n_recordsInBucket % head.getBlockingFactor();
     n_recordsInBlock = n_recordsInBucket - n_overflowRecords; 
 
-    cout << "Records: " << n_recordsInBucket << "\n";
+    // cout << "Records: " << n_recordsInBucket << "\n";
 
     // Se houver registros no bloco do bucket, então comece a buscar entre eles.
     if (n_recordsInBlock > 0) {
@@ -61,15 +61,15 @@ int HashManipulator::findOne(int id)
     if (n_overflowRecords > 0 && !found) {
         int overflow_record_block_addr = head.buckets[bucket_id].overflow.first_block_addr;
         int overflow_record_block_offset = head.buckets[bucket_id].overflow.first_block_offset;
-        cout << overflow_record_block_addr << " , " << overflow_record_block_offset << "\n";  
+        // cout << overflow_record_block_addr << " , " << overflow_record_block_offset << "\n";  
         while (overflow_record_block_addr > 0) {
             // Carrega o próximo registro de overflow.
             recordAddr = (overflow_record_block_addr * head.blockSize + overflow_record_block_offset * sizeof(HashFixedRecord));
-            cout << record.nomedep << "\n";
-            cout << "\n\n" << recordAddr << "\n\n";
+            // cout << record.nomedep << "\n";
+            // cout << "\n\n" << recordAddr << "\n\n";
             this->fileRead.seekg(sizeof(head) + recordAddr);
             this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
-            cout << "\n\n" << record.nextRecord_block_addr << " , " << record.nextRecord_block_offset << "\n\n";
+            // cout << "\n\n" << record.nextRecord_block_addr << " , " << record.nextRecord_block_offset << "\n\n";
             blocksAccessed++;
             
             // Verificando se o registro é o que estamos procurando.
@@ -81,7 +81,7 @@ int HashManipulator::findOne(int id)
             // Carregando o próximo registro da lista de overflows.
             overflow_record_block_addr = record.nextRecord_block_addr;
             overflow_record_block_offset = record.nextRecord_block_offset;
-            cout << overflow_record_block_addr << " , " << overflow_record_block_offset << "\n";  
+            // cout << overflow_record_block_addr << " , " << overflow_record_block_offset << "\n";  
 
         };
     }  
@@ -113,16 +113,21 @@ int HashManipulator::findWhereEqual(string attribute, int value)
     this->openForReading();
     this->fileRead.read((char *) &head, sizeof(head));
 
-    int bucket_id, block_addr, n_recordsInBlock, firstRecordAddr;
-    
+    int bucket_id, block_addr, n_recordsInBlock, n_recordsInBucket, n_overflowRecords, recordAddr;
+    int overflow_record_block_addr, overflow_record_block_offset;
+
     blocksAccessed = 0;
 
+    // Procurando pelos registros nos blocos mapeados pelos buckets.
     for (bucket_id = 0; bucket_id < NUMBER_OF_BUCKETS; bucket_id++)
-    {
+    {        
         block_addr = head.buckets[bucket_id].block_addr;
-        n_recordsInBlock = head.buckets[bucket_id].numberOfRecords;
-        firstRecordAddr = (block_addr * head.blockSize);
-        this->fileRead.seekg(sizeof(head) + firstRecordAddr);
+        n_recordsInBucket = head.buckets[bucket_id].numberOfRecords;
+        n_overflowRecords = (n_recordsInBucket <= head.getBlockingFactor()) ? 0 : n_recordsInBucket % head.getBlockingFactor();
+        n_recordsInBlock = n_recordsInBucket - n_overflowRecords; 
+        
+        recordAddr = (block_addr * head.blockSize);
+        this->fileRead.seekg(sizeof(head) + recordAddr);
 
         for (int i = 0; i < n_recordsInBlock; i++) {
             this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
@@ -154,6 +159,47 @@ int HashManipulator::findWhereEqual(string attribute, int value)
                 default:
                     return -1;
             }
+        }
+    }
+
+    // Procurando pelos registros nos blocos de overflow.
+    for (int OFRecord = 0; OFRecord < head.numberOfOverflowRecords; OFRecord++)
+    {        
+        overflow_record_block_addr = (NUMBER_OF_BUCKETS) + (head.numberOfOverflowRecords / head.getBlockingFactor());
+        overflow_record_block_offset = head.numberOfOverflowRecords % head.getBlockingFactor();
+        
+        recordAddr = (overflow_record_block_addr * head.blockSize) + (overflow_record_block_offset * sizeof(record));
+        this->fileRead.seekg(sizeof(head) + recordAddr);
+
+        this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
+        blocksAccessed++;
+
+        switch (attr)
+        {
+            case 0: /*id*/
+                if (record.id == value)
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            case 5: /*tipoesc*/
+                if (record.tipoesc == value)
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            case 9: /*n_alunos*/
+                if (record.n_alunos == value)
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            default:
+                return -1;
+            
         }
     }
 

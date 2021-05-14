@@ -136,7 +136,7 @@ int HashFileCreator::insertRecords()
 
                 closeNewFileReading();
 
-                cout << "Next record: " << tempRecord.nextRecord_block_addr << " , " << tempRecord.nextRecord_block_offset << "\n";
+                // cout << "Next record: " << tempRecord.nextRecord_block_addr << " , " << tempRecord.nextRecord_block_offset << "\n";
 
                 openNewFileWriting();
 

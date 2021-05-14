@@ -10,6 +10,6 @@ int main(int argc, char *argv[]) {
 	hash->insertRecords();
 	FileManager * manager = new FileManager();
 	manager->loadFile("teste.dat");
-	cout << manager->fm->findOne(id);
+	cout << manager->fm->findWhereEqual("TIPOESC",id);
 	return 0;
 }
