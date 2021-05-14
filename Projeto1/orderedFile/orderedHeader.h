@@ -7,7 +7,7 @@
 #define MAX_ORDERED_FIELD_SIZE 128
 using namespace std;
 
-template <class T = char[MAX_ORDERED_FIELD_SIZE]>
+template <class T>
 class orderedHeader : public FileHeader 
 {
     public:

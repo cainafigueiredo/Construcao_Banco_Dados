@@ -11,12 +11,12 @@
 
 using namespace std;
 
-template <class T = int>
+template <class T>
 class orderedFileCreator : public FileCreator
 {
     public:
         orderedFileCreator(char* fileName,char* newFileName,char* order_by);
-        orderedHeader<T> header;
+        orderedHeader <char[MAX_ORDERED_FIELD_SIZE]> header;
         int insertHeader();
         int insertRecords();
         int getHeader();
