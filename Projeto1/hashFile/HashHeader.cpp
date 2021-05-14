@@ -10,8 +10,22 @@ HashHeader::HashHeader()
         this->buckets[i].setBlockAddr(i);
         this->buckets[i].setNumberOfRecords(0);
     }
+
+    this->numberOfOverflowRecords = 0;
 }
 
 int HashHeader::hashFunction(int primaryKey) {
     return (primaryKey % NUMBER_OF_BUCKETS);
+}
+
+void HashHeader::incrementNumberOfOverflowRecords() {
+	this->numberOfOverflowRecords++;
+}
+
+void HashHeader::decrementNumberOfOverflowRecords() {
+	this->numberOfOverflowRecords--;
+}
+
+int HashHeader::getBlockingFactor() {
+    return (this->blockSize/this->recordSize);
 }

@@ -1,7 +1,9 @@
 
 struct OverflowBucket {
-    int block_addr;
-    int block_offset;
+    int first_block_addr;
+    int first_block_offset;
+	int last_block_addr;
+    int last_block_offset;
 };
 
 class Bucket {

@@ -8,7 +8,7 @@
 #include <sstream>
 #include <forward_list>
 #include "../FileCreator.h"
-#include "../FixedRecord.h"
+#include "./HashFixedRecord.h"
 #include "HashHeader.h"
 
 using namespace std;

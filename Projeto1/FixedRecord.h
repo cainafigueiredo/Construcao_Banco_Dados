@@ -25,11 +25,4 @@ class FixedRecord
     double cod_esc;
 };
 
-class HashFixedRecord : public FixedRecord 
-{
-    public:
-        HashFixedRecord() : FixedRecord(){this->nextRecord = -1;};
-        int nextRecord;
-};
-
 #endif
