@@ -17,41 +17,45 @@ vector<wrapper> make_wrapper_buffer(FixedRecord *buff,int order,int size_buff)
     return vec_wp;
 }
 
+//retorna true quando a.campo < b.campo
 bool compare_records(wrapper &a,wrapper &b)
 {   
+    bool resultado = false;
     switch(a.compare_by)
     {
         case 0:    
-            return a.r->id < b.r->id;   
+            resultado = (a.r->id < b.r->id);   
             break;
         case 1:
-            return strcmp(a.r->nomedep,b.r->nomedep) >= 0;
+            resultado = (strcmp(a.r->nomedep,b.r->nomedep) <= 0);
             break;
         case 2:
-            return strcmp(a.r->de,b.r->de) >= 0;
+            resultado = (strcmp(a.r->de,b.r->de) <= 0);
+            cout<<"LEFT: "<<a.r->de<<"|RIGHT: "<<b.r->de<<"|result "<<resultado<<endl;
             break;
         case 3:
-            return strcmp(a.r->distr,b.r->distr) >= 0 ;
+            resultado =  (strcmp(a.r->distr,b.r->distr) <= 0) ;
             break;
         case 4:
-            return strcmp(a.r->mun,b.r->mun) >=0 ;
+            resultado = (strcmp(a.r->mun,b.r->mun) <=0 );
             break;
         case 5:
-            return a.r->tipoesc <= b.r->tipoesc;
+            resultado = (a.r->tipoesc <= b.r->tipoesc);
             break;
         case 6:
-            return a.r->cod_esc <= b.r->cod_esc;
+            resultado = (a.r->cod_esc <= b.r->cod_esc);
             break;
         case 7:
-            return strcmp(a.r->nomesc,b.r->nomesc) >= 0;
+            resultado = (strcmp(a.r->nomesc,b.r->nomesc) <= 0);
             break;
         case 8:
-            return strcmp(a.r->ds_pais,b.r->ds_pais) >= 0;
+            resultado = (strcmp(a.r->ds_pais,b.r->ds_pais) <= 0);
             break;
         case 9:
-            return a.r->n_alunos <= b.r->n_alunos;
+            resultado = (a.r->n_alunos <= b.r->n_alunos);
             break;
     }
+    return resultado;
 }
 
 void orderedManipulator::writeBufferToTempFile(vector<wrapper> buffer,orderedHeader<char[MAX_ORDERED_FIELD_SIZE]> *head)
@@ -61,15 +65,22 @@ void orderedManipulator::writeBufferToTempFile(vector<wrapper> buffer,orderedHea
     this->tempFile.seekp(0, ios::beg);
     if(head)
     {
-        this->tempFile.write( (char *) &head, sizeof(orderedHeader<char[MAX_ORDERED_FIELD_SIZE]>));
+        this->tempFile.write( (char *) head, sizeof(orderedHeader<char[MAX_ORDERED_FIELD_SIZE]>));
+        cout<<head->ordered_by<<endl;
     }
     for(int i=0; i < buffer.size(); i++){
         FixedRecord *cur = buffer[i].r;
-        this->tempFile.write( (char *) &cur, sizeof(FixedRecord));
+        this->tempFile.write( (char *) cur, sizeof(FixedRecord));
+        cout<<cur->de<<endl;
     }
     this->closeTempFileWriting();
     remove (this->fileName.c_str());
     rename ((this->fileName + ".temp").c_str(), this->fileName.c_str());
+}
+
+void orderedManipulator()
+{
+
 }
 
 void orderedManipulator::ordenateFile()
@@ -92,15 +103,16 @@ void orderedManipulator::ordenateFile()
         cout<<&buffer[0]<<endl;
         vector<wrapper> wp = make_wrapper_buffer(buffer,this->ordered_by,head.recordsAmount);
         this->printSchema();
-        for (int i = 0; i < head.recordsAmount; i++)
-        {   
-            this->printRecord(*wp[i].r);
-        }
         cout<<"Finished reading recs"<<endl;
         sort(wp.begin(), wp.end(), compare_records);
         cout<<"Finished sorting recs"<<endl;
-        this->writeBufferToTempFile(wp);
+        // for (int i = 0; i < head.recordsAmount; i++)
+        // {   
+        //     this->printRecord(*wp[i].r);
+        // }
+        this->writeBufferToTempFile(wp,&head);
     }
+
 }
 
 FixedRecord *orderedManipulator::findNext()
@@ -113,15 +125,18 @@ FixedRecord *orderedManipulator::findNext()
         orderedHeader <char[MAX_ORDERED_FIELD_SIZE]> head;
         this->fileRead.read((char *) &head, sizeof(head));
         this->currPos = this->fileRead.tellg();
+        cout<<head.extension_file<<"| tellg: "<<this->currPos<<endl;
     }
-    if(this->currPos != this->fileRead.end)
+    if(!this->fileRead.eof())
     {
         record = new FixedRecord;
         this->fileRead.read((char *) record, sizeof(FixedRecord));
-        this->currPos = this->fileRead.tellg();
+        this->currPos = this->fileRead.tellg(); 
+        // cout<<record->de<<"| tellg: "<<this->currPos<<endl;
     }
     else
         this->currPos = 0;
+    this->closeForReading();
     return record;
 }
 
