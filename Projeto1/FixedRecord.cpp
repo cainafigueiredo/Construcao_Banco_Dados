@@ -32,3 +32,8 @@ int FixedRecord::makeDeleted()
 
     return 0;
 }
+
+int FixedRecord::isDeleted()
+{
+    return this->id == -1;
+}

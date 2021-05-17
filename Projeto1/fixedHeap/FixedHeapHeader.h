@@ -12,6 +12,7 @@ class FixedHeapHeader: public FileHeader
         FixedHeapHeader();
         int recordSize;
         int freeList;
+        int lastID;
 };
 
 #endif

@@ -171,46 +171,45 @@ int FixedHeapManipulator::findWhereEqual(string attribute, string value)
     for (i = 0; i < head.recordsAmount; i++)
     {
         this->fileRead.read((char *) &record, sizeof(FixedRecord));
-        cout << "attr: " << attr << " n_alunos: " << record.ds_pais << endl;
         switch (attr)
         {
             case 1: /*nomedep*/
-                if (string(record.nomedep).compare(value))
+                if (!string(record.nomedep).compare(value))
                 {
                     records.push_back(record);
                 }
                 found = true;
                 break;
             case 2: /*de*/
-                if (string(record.de).compare(value))
+                if (!string(record.de).compare(value))
                 {
                     records.push_back(record);
                 }
                 found = true;
                 break;
             case 3: /*distr*/
-                if (string(record.distr).compare(value))
+                if (!string(record.distr).compare(value))
                 {
                     records.push_back(record);
                 }
                 found = true;
                 break;
             case 4: /*mun*/
-                if (string (record.mun).compare(value))
+                if (!string (record.mun).compare(value))
                 {
                     records.push_back(record);
                 }
                 found = true;
                 break;
             case 7: /*nomesc*/
-                if (string (record.nomesc).compare(value))
+                if (!string (record.nomesc).compare(value))
                 {
                     records.push_back(record);
                 }
                 found = true;
                 break;
             case 8: /*ds_pais*/
-                if (string (record.ds_pais).compare(value) == 0)
+                if (!string (record.ds_pais).compare(value))
                 {
                     records.push_back(record);
                 }
@@ -355,7 +354,7 @@ int FixedHeapManipulator::removeOne(int id)
     FixedHeapHeader head;
     FixedRecord record;
     bool found = false;
-    int i;
+    int i, blocksAccessed = 0;
     int offset = 0;
 
     this->openForReading();
@@ -365,6 +364,7 @@ int FixedHeapManipulator::removeOne(int id)
     for (i = 0; i < head.recordsAmount; i++)
     {
         this->fileRead.read((char *) &record, sizeof(FixedRecord));
+        blocksAccessed++;
         if (record.id == id)
         {
             found = true;
@@ -378,7 +378,8 @@ int FixedHeapManipulator::removeOne(int id)
         return -1;
     }
 
-    this->updateFreeListInsertDeleted(offset, head);
+    blocksAccessed += this->updateFreeListInsertDeleted(offset, head);
+    cout << "Blocks Accessed: " << blocksAccessed << endl;
    
     return 0;
 }
@@ -387,7 +388,7 @@ int FixedHeapManipulator::removeBetween(string attribute, int value1, int value2
 {
     FixedHeapHeader head;
     FixedRecord record;
-    int attr;
+    int attr, blocksAccessed = 0;
     int offset, auxOffset;
     int numDeleted = 0;
     int i = 0;
@@ -413,21 +414,83 @@ int FixedHeapManipulator::removeBetween(string attribute, int value1, int value2
             case 0: /*id*/
                 if (record.id >= value1 && record.id <= value2)
                 {
-                    this->updateFreeListInsertDeleted(offset, head);
+                    blocksAccessed += this->updateFreeListInsertDeleted(offset, head);
                     numDeleted++;
                 }
                 break;
             case 5: /*tipoesc*/
                 if (record.tipoesc >= value1 && record.tipoesc <= value2)
                 {
-                    this->updateFreeListInsertDeleted(offset, head);
+                    blocksAccessed += this->updateFreeListInsertDeleted(offset, head);
                     numDeleted++;
                 }
                 break;
             case 9: /*n_alunos*/
                 if (record.n_alunos >= value1 && record.n_alunos <= value2)
                 {
-                    this->updateFreeListInsertDeleted(offset, head);
+                    blocksAccessed += this->updateFreeListInsertDeleted(offset, head);
+                    numDeleted++;
+                }
+                break;
+            default:
+                return -1;
+        }
+        offset += sizeof(FixedRecord);
+        i++;
+        blocksAccessed++;
+    }while (i < head.recordsAmount);
+    
+    cout << "Blocks Accessed: " << blocksAccessed << endl;
+    cout << "Rows deleted: " << numDeleted << endl;
+    
+    return 0;
+}
+
+int FixedHeapManipulator::removeBetween(string attribute, double value1, double value2)
+{
+    FixedHeapHeader head;
+    FixedRecord record;
+    int attr, blocksAccessed = 0;
+    int offset, auxOffset;
+    int numDeleted = 0;
+    int i = 0;
+    map<string, int> m = this->createMap();
+    attr = m[attribute];
+    
+    offset = sizeof(FixedHeapHeader);
+    auxOffset = offset;
+    do
+    {
+        this->openForReading();
+        this->fileRead.seekg(0, ios::beg);
+        this->fileRead.read((char *) &head, sizeof(head));
+        
+        this->fileRead.seekg(auxOffset, ios::beg);
+        this->fileRead.read((char *) &record, sizeof(FixedRecord));
+
+        auxOffset = this->fileRead.tellg();
+        
+        this->closeForReading();
+        switch (attr)
+        {
+            case 0: /*id*/
+                if (record.id >= value1 && record.id <= value2)
+                {
+                    blocksAccessed += this->updateFreeListInsertDeleted(offset, head);
+                    numDeleted++;
+                }
+                break;
+            case 5: /*tipoesc*/
+                if (record.tipoesc >= value1 && record.tipoesc <= value2)
+                {
+                    blocksAccessed += this->updateFreeListInsertDeleted(offset, head);
+                    numDeleted++;
+                }
+                break;
+            case 9: /*n_alunos*/
+                if (record.n_alunos >= value1 && record.n_alunos <= value2)
+                {
+                    blocksAccessed += this->updateFreeListInsertDeleted(offset, head);
                     numDeleted++;
                 }
                 break;
@@ -438,20 +501,17 @@ int FixedHeapManipulator::removeBetween(string attribute, int value1, int value2
         i++;
     }while (i < head.recordsAmount);
 
+    cout << "Blocks Accessed: " << blocksAccessed << endl;
     cout << "Rows deleted: " << numDeleted << endl;
     
     return 0;
-}
-
-int FixedHeapManipulator::removeBetween(string attribute, double value1, double value2)
-{
- return 0;   
 }
 
 int FixedHeapManipulator::updateFreeListInsertDeleted(int offset, FixedHeapHeader head)
 {
     FixedRecord deleted;
     FixedRecord record;
+    int blocksAccessed = 0;
 
     int auxOffset;
     deleted.makeDeleted();
@@ -470,6 +530,7 @@ int FixedHeapManipulator::updateFreeListInsertDeleted(int offset, FixedHeapHeade
         {
             this->fileRead.seekg(auxOffset, ios::beg);
             this->fileRead.read((char *) &record, sizeof(FixedRecord));
+            blocksAccessed++;
             auxOffset = record.n_alunos;
         } while (record.n_alunos != -1);
         record.n_alunos = offset;
@@ -496,5 +557,140 @@ int FixedHeapManipulator::updateFreeListInsertDeleted(int offset, FixedHeapHeade
 
     this->insertHeader(head);
     
+    return blocksAccessed;
+}
+
+int FixedHeapManipulator::insertOne(string record)
+{
+    FixedRecord newR;
+    FixedHeapHeader head;
+    int offset;
+    int acessedBlocks = 0;
+
+    this->openForReading();
+    this->fileRead.seekg(0, ios::beg);
+    this->fileRead.read( (char *) &head, sizeof(head));
+    this->closeForReading();
+    
+    /*botar o id*/
+    newR.readCSVLine(record);
+    newR.id = head.lastID + 1;
+    head.lastID++;
+    /*if there is a deleted space*/
+    if (head.freeList != 0)
+    {
+        FixedRecord auxRecord;
+        this->openForReading();
+        this->fileRead.seekg(head.freeList, ios::beg);
+        this->fileRead.read( (char *) &auxRecord, sizeof(FixedRecord));
+        acessedBlocks++;
+        this->closeForReading();
+
+        this->openForWriting();
+        this->fileWrite.seekp(head.freeList, ios::beg);
+        this->fileWrite.write((char *) &newR, sizeof(FixedRecord));
+        head.freeList = auxRecord.n_alunos;
+        this->closeForWriting();
+        this->insertHeader(head);
+
+        cout << "Accessed Blocks: " << acessedBlocks << endl;
+        return 0;
+    }
+    
+    offset = (head.recordsAmount * sizeof(FixedRecord)) + sizeof(FixedHeapHeader);
+    this->openForWriting();
+    this->fileWrite.seekp(offset, ios::beg);
+    this->fileWrite.write((char *) &newR, sizeof(FixedRecord));
+    this->closeForWriting();
+    head.recordsAmount++;
+    this->insertHeader(head);
+
+    cout << "Accessed Blocks: " << acessedBlocks << endl;
+    return 0;
+}
+
+int FixedHeapManipulator::insertMultiple(vector<string> inserts)
+{
+    for (auto const &record: inserts)
+    {
+        this->insertOne(record);
+    }
+
+    return 0;
+}
+
+int FixedHeapManipulator::reorganize()
+{
+    FixedRecord record;
+    FixedHeapHeader head;
+    int recordCount = 0;
+    int accessedBlocks = 0;
+
+    this->openForReading();
+    this->fileRead.seekg(0, ios::beg);
+    this->fileRead.read((char *) &head, sizeof(FixedHeapHeader));
+    this->closeForReading();
+    
+    if (head.freeList == 0)
+    {
+        return 0;
+    }
+
+    this->createTempFile();
+    
+    this->openTempFileWriting();
+    this->openForReading();
+    
+    this->fileRead.seekg(sizeof(FixedHeapHeader), ios::beg);
+    this->tempFile.seekp(0, ios::beg);
+    this->tempFile.write( (char *) &head, sizeof(FixedHeapHeader));
+    for (int i = 0; i < head.recordsAmount; i++)
+    {
+        this->fileRead.read ( (char *) &record, sizeof(FixedRecord));
+        if (record.id != -1)
+        {
+            this->tempFile.write( (char *) &record, sizeof(FixedRecord));
+            recordCount++;
+        }
+        accessedBlocks++;
+    }
+    head.recordsAmount = recordCount;
+    this->tempFile.seekp(0, ios::beg);
+    this->tempFile.write( (char *) &head, sizeof (FixedHeapHeader));
+    
+    this->closeForReading();
+    this->closeTempFileWriting();
+
+    remove (this->fileName.c_str());
+    rename ((this->fileName + ".temp").c_str(), this->fileName.c_str());
+    
+    cout << "Accessed Blocks: " << accessedBlocks << endl;
+    return 0;
+}
+
+int FixedHeapManipulator::createTempFile()
+{
+    this->tempFile.open(this->fileName + ".temp", ios::binary | ios::out);
+    if (!this->tempFile.good())
+    {
+        return -1;
+    }
+    this->tempFile.close();
+    return 0;
+}
+
+int FixedHeapManipulator::openTempFileWriting()
+{
+    this->tempFile.open(this->fileName + ".temp", fstream::binary | ios::out | ios::in);
+    if (!this->tempFile.is_open())
+    {
+        return -1;
+    }
+    return 0;
+}
+
+int FixedHeapManipulator::closeTempFileWriting()
+{
+    this->tempFile.close();
     return 0;
 }

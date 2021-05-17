@@ -138,12 +138,3 @@ int main(int argc, char *argv[]) {
 		cout << "-------------------------------------------------------\n\n";
 
 	}
-	/*
-
-	
-	//cout << manager->fm->removeOne(id1);
-	//cout << manager->fm->findOne(id2);
-	cout << manager->fm->removeBetween(field, float(value1), float(value2));
-	*/
-	return 0;
-}
