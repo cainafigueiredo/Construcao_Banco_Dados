@@ -8,22 +8,22 @@
 #include <sstream>
 #include <forward_list>
 #include "../FileCreator.h"
-#include "../FixedRecord.h"
-#include "FixedHeapHeader.h"
+#include "./HashFixedRecord.h"
+#include "HashHeader.h"
 
 using namespace std;
 
 
-class FixedHeapFileCreator : public FileCreator
+class HashFileCreator : public FileCreator
 {
     public:
-        FixedHeapFileCreator(string fileName, string newFileName);
-        ~FixedHeapFileCreator(){return;};
-        FixedHeapHeader header;
+        HashFileCreator(string fileName, string newFileName);
+        ~HashFileCreator(){return;};
+        HashHeader header;
         int insertHeader();
         int insertRecords();
         int getHeader();
         using FileCreator::readCsvLine;
-        int readCsvLine(FixedRecord &newRecord);
+        int readCsvLine(HashFixedRecord &newRecord);
 };
 #endif

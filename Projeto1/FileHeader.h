@@ -13,6 +13,7 @@ class FileHeader
         int headerSize;
         int fileOrganization;
         int recordsAmount;
+        int blockSize;
 
 		void incrementRecordsAmount();
 		void decrementRecordsAmount();

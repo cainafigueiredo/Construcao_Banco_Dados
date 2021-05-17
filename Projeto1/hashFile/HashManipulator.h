@@ -1,21 +1,21 @@
-#ifndef _FIXED_HEAP_MANIPULATOR_
-#define _FIXED_HEAP_MANIPULATOR_
+#ifndef _HASH_MANIPULATOR_
+#define _HASH_MANIPULATOR_
 
 #include <vector>
-#include <cstring>
+
 #include "../FileManipulator.h"
-#include "FixedHeapHeader.h"
-#include "../FixedRecord.h"
+#include "HashHeader.h"
+#include "./HashFixedRecord.h"
+
 using namespace std;
 
-class FixedHeapManipulator : public FileManipulator
+class HashManipulator : public FileManipulator
 {
     public:
-        FixedHeapManipulator(string fileName) : FileManipulator(fileName){return;};
+        HashManipulator(string fileName);
         
-        int printRecord(FixedRecord r);
-        int insertHeader(FixedHeapHeader head);
-        
+        int printRecord(HashFixedRecord r);
+        int insertHeader(HashHeader head);
 
         int findOne(int id);
         int findWhereEqual(string attribute, int value);
@@ -27,6 +27,5 @@ class FixedHeapManipulator : public FileManipulator
         int removeOne(int id);
         int removeBetween(string attribute, int value1, int value2);
         int removeBetween(string attribute, double value1, double value2);
-        int updateFreeListInsertDeleted (int offset, FixedHeapHeader head);
 };
 #endif

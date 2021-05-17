@@ -9,12 +9,11 @@ FileCreator::FileCreator(string rawfileName, string newFileName)
         cout << "Error opening raw file\n";
         return;
     }
-    if (this->openNewFileWriting() == -1)
+    if (this->createNewFile() == -1)
     {
         cout << "Error creating new file\n";
         return;
     }
-    this->closeNewFile();
 }
 
 int FileCreator::openRawFile ()
@@ -28,10 +27,27 @@ int FileCreator::openRawFile ()
 
 }
 
+int FileCreator::closeRawFile ()
+{
+    this->rawDataFile.close();
+    return 0;
+}
+
+int FileCreator::createNewFile()
+{
+    this->outNewFile.open(this->newFileName, ios::binary | ios::out);
+    if (!this->outNewFile.good())
+    {
+        return -1;
+    }
+    this->outNewFile.close();
+    return 0;
+}
+
 int FileCreator::openNewFileWriting()
 {
-    this->newFile.open(this->newFileName, fstream::out | fstream::binary);
-    if (!this->newFile.good())
+    this->outNewFile.open(this->newFileName, fstream::binary | ios::out | ios::in);
+    if (!this->outNewFile.is_open())
     {
         return -1;
     }
@@ -39,8 +55,8 @@ int FileCreator::openNewFileWriting()
 }
 int FileCreator::openNewFileReading()
 {
-    this->newFile.open(this->newFileName, fstream::in | fstream::binary);
-    if (!this->newFile.good())
+    this->inNewFile.open(this->newFileName, fstream::in | fstream::binary);
+    if (!this->inNewFile.is_open())
     {
         return -1;
     }
@@ -48,22 +64,14 @@ int FileCreator::openNewFileReading()
 }
 
 
-int FileCreator::closeNewFile()
+int FileCreator::closeNewFileWriting()
 {
-    this->newFile.close();
+    this->outNewFile.close();
     return 0;
 }
 
-int FileCreator::addDict()
+int FileCreator::closeNewFileReading()
 {
-    string toWrite;
-    this->dictFile.open("filetypeDict.txt", fstream::out);
-    if (!this->dictFile.good())
-    {
-        return -1;
-    }
-    toWrite = this->newFileName + ":" + to_string(this->type);
-    this->dictFile << toWrite;
-    this->dictFile.close();
+    this->inNewFile.close();
     return 0;
 }

@@ -4,35 +4,32 @@
 FixedHeapFileCreator::FixedHeapFileCreator(string fileName, string newFileName) : FileCreator (fileName, newFileName)
 {
     this->insertHeader();
-    this->type = FixedHeap;
-    this->addDict();
-    
 }
 
 int FixedHeapFileCreator::insertHeader()
 {
     if(this->openNewFileWriting() == -1)
     {
+        this->closeNewFileWriting();
         cout << "Error opening the file for writing";
-        this->closeNewFile();
         return -1;
     }
-    this->newFile.seekg(0);
-    this->newFile.write((char *) &(this->header), this->header.headerSize);
-    this->closeNewFile();
+    this->outNewFile.seekp(0, ios::beg);
+    this->outNewFile.write((char *) &(this->header), sizeof(this->header));
+    this->closeNewFileWriting();
     return 0;
 }
 
 int FixedHeapFileCreator::getHeader()
 {   
     this->openNewFileReading();
-    this->newFile.seekg(0);
-    if (!this->newFile.read((char *) &(this->header), this->header.headerSize))
+    this->inNewFile.seekg(0, ios::beg);
+    if (!this->inNewFile.read((char *) &(this->header), sizeof(this->header)))
     {
-        this->closeNewFile();
+        this->closeNewFileReading();
         return -1;
     }
-    this->closeNewFile();
+    this->closeNewFileReading();
     return 0;
 }
 
@@ -45,25 +42,7 @@ int FixedHeapFileCreator::readCsvLine(FixedRecord &newRecord)
         return -1;
     }
 
-    stringstream ss(line);
-    
-    getline(ss, newRecord.nomedep, ',');
-    ss.ignore();
-    getline(ss, newRecord.de, ',');
-    ss.ignore();
-    getline(ss, newRecord.distr, ',');
-    ss.ignore();
-    getline(ss, newRecord.mun, ',');
-    ss.ignore();
-    ss >> newRecord.tipoesc;
-    ss.ignore();
-    ss >> newRecord.cod_esc;
-    ss.ignore();
-    getline(ss, newRecord.nomesc, ',');
-    ss.ignore();
-    getline(ss, newRecord.ds_pais, ',');
-    ss.ignore();
-    ss >> newRecord.n_alunos;
+    newRecord.readCSVLine(line);
 
     return 0;
 }
@@ -80,18 +59,18 @@ int FixedHeapFileCreator::insertRecords()
     }
 
     this->openNewFileWriting();
+    this->outNewFile.seekp(sizeof(this->header), ios::beg);
     while(this->readCsvLine(newRecord) == 0)
     {
         newRecord.id = numbers++;
-        this->newFile.write((char *) &newRecord, sizeof(newRecord));
+        this->outNewFile.write((char *) &newRecord, sizeof(newRecord));
         this->header.recordsAmount++;
-    }   
-    cout << endl;
-
-    /*closed for reading*/
-    this->closeNewFile();
+    }
+    // cout << endl;
+    this->closeRawFile();
+    this->closeNewFileWriting();
     this->insertHeader();
-
+ 
     return 0;
 
 }
