@@ -1,23 +1,140 @@
-#include "FileCreator.h"
-#include "FixedRecord.h"
-#include "fixedHeap/FixedHeapFileCreator.h"
-#include "fixedHeap/FixedHeapHeader.h"
-#include "fixedHeap/FixedHeapManipulator.h"
-
 #include <iostream>
+#include "./hashFile/HashFileCreator.h"
+#include "FileManager.h"
 
-int main ()
-{
-    FixedHeapFileCreator a ("teste.csv", "newFile_teste");
-    FixedHeapManipulator teste("newFile_teste");
-    a.insertRecords();
-    a.getHeader();
-    // cout << "FRONT: " << a.header.freeList<< endl;
+using namespace std;
 
-    teste.findWhereBetween("id", 0, 12);
-    teste.removeBetween("id", 0, 2);
-    teste.findWhereBetween("id", 0, 12);
-    // teste.reorganize();
-    // teste.findWhereBetween("id", -1, 12);
-    return 0;
-}
+#define NEW_BASE_INSTRUCTION "newBase"
+#define LOAD_BASE_INSTRUCTION "loadBase"
+#define FIND_ONE_BY_ID_INSTRUCTION "findOneById"
+#define FIND_WHERE_EQUAL_INSTRUCTION "findWhereEqual"
+#define FIND_WHERE_BETWEEN_INSTRUCTION "findWhereBetween"
+#define REMOVE_ONE_BY_ID_INSTRUCTION "removeOneById"
+#define REMOVE_WHERE_BETWEEN_INSTRUCTION "removeWhereBetween"
+
+#define HASH_ORGANIZATION "externalHash"
+
+#define NEW_BASE_HELP "newBase:\nOrganização do arquivo | Caminho para o CSV | Caminho e nome do arquivo de destino\n"
+
+int main(int argc, char *argv[]) {
+	HashFileCreator * hash; 
+	string command;
+	FileManager * manager = new FileManager();
+	for (int i = 1; i < argc; i++) {
+		
+		command = argv[i];
+
+		cout << "> Executing instruction: " << command << "\n";
+
+		if (command == "help") {
+			string instruction = argv[i+1];
+			if (instruction == NEW_BASE_INSTRUCTION) {
+				cout << NEW_BASE_HELP << endl; 
+			}
+			i = i+1;
+		}
+
+		// Criar um arquivo de registros a partir
+		else if (command == NEW_BASE_INSTRUCTION) {
+			string organization = argv[i+1];
+			string source = argv[i+2];
+			string destiny = argv[i+3];
+			if (organization == HASH_ORGANIZATION) {
+				hash = new HashFileCreator(source, destiny);
+				hash->insertRecords();
+			}
+			i = i+3;
+		}
+
+		// Criar um arquivo de registros a partir
+		else if (command == LOAD_BASE_INSTRUCTION) {
+			string source = argv[i+1];
+			manager->loadFile(source);
+			i = i+1;
+		}
+
+		else if (command == FIND_ONE_BY_ID_INSTRUCTION) {
+			int id = atoi(argv[i+1]);
+			cout << manager->fm->findOne(id) << endl;
+			i = i+1;
+		}
+
+		else if (command == FIND_WHERE_EQUAL_INSTRUCTION) {
+			string fieldType = argv[i+1];
+			string fieldName = argv[i+2];
+			string string_value;
+			int int_value;
+			double double_value;
+			
+			if (fieldType == "integer") {
+				int_value = atoi(argv[i+3]);
+				cout << manager->fm->findWhereEqual(fieldName, int_value) << endl;
+			} else 
+
+			if (fieldType == "string") {
+				string_value = argv[i+3];
+				cout << manager->fm->findWhereEqual(fieldName, string_value) << endl;
+			} else 
+
+			if (fieldType == "double") {
+				double_value = atoi(argv[i+3]);
+				cout << manager->fm->findWhereEqual(fieldName, double_value) << endl;
+			}
+			
+			i = i+3;
+		}
+
+		else if (command == FIND_WHERE_BETWEEN_INSTRUCTION) {
+			string fieldType = argv[i+1];
+			string fieldName = argv[i+2];
+
+			int int_value1, int_value2;
+			double double_value1, double_value2;
+			
+			if (fieldType == "integer") {
+				int_value1 = atoi(argv[i+3]);
+				int_value2 = atoi(argv[i+4]);
+				cout << manager->fm->findWhereBetween(fieldName, int_value1, int_value2) << endl;
+			} else 
+
+			if (fieldType == "double") {
+				double_value1 = atoi(argv[i+3]);
+				double_value2 = atoi(argv[i+4]);
+				cout << manager->fm->findWhereBetween(fieldName, double_value1, double_value2) << endl;
+			}
+			
+			i = i+4;
+		}
+
+		else if (command == REMOVE_ONE_BY_ID_INSTRUCTION) {
+			int id = atoi(argv[i+1]);
+			cout << manager->fm->removeOne(id) << endl;
+			i = i+1;
+		} 
+
+		else if (command == REMOVE_WHERE_BETWEEN_INSTRUCTION) {
+			string fieldType = argv[i+1];
+			string fieldName = argv[i+2];
+
+			int int_value1, int_value2;
+			double double_value1, double_value2;
+			
+			if (fieldType == "integer") {
+				int_value1 = atoi(argv[i+3]);
+				int_value2 = atoi(argv[i+4]);
+				cout << manager->fm->removeBetween(fieldName, int_value1, int_value2) << endl;
+			} else 
+
+			if (fieldType == "double") {
+				double_value1 = atoi(argv[i+3]);
+				double_value2 = atoi(argv[i+4]);
+				cout << manager->fm->removeBetween(fieldName, double_value1, double_value2) << endl;
+			}
+			
+			i = i+4;
+		}
+
+		cout << "\n> Instruction finished: " << command << "\n";
+		cout << "-------------------------------------------------------\n\n";
+
+	}

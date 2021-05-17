@@ -61,5 +61,9 @@ class FileManipulator
         virtual int createTempFile(){return 0;};
         virtual int openTempFileWriting(){return 0;};
         virtual int closeTempFileWriting(){return 0;};
+
+        virtual int removeBetween(string attribute, int value1, int value2){return 0;};
+        virtual int removeBetween(string attribute, double value1, double value2){return 0;};
+
 };
 #endif

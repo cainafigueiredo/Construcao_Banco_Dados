@@ -9,7 +9,6 @@
 
 using namespace std;
 
-
 class FixedRecord
 {
     public:
@@ -26,4 +25,5 @@ class FixedRecord
     int tipoesc, n_alunos;
     double cod_esc;
 };
+
 #endif

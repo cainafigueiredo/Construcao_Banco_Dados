@@ -20,11 +20,15 @@ int FileManager::loadFile(string filePath) {
 
 	// Se chegou aqui, é porque deu tudo certo. 
 	// Vamos inicializar os atributos baseado nas informações do arquivo de registros carregado
-	this->fileName = filePath;
+	this->fileName = filePath; 
+
 	switch(this->fileOrganization)
 	{
 		case 0:
 			this->fm = new FixedHeapManipulator(this->fileName);
+			break;
+		case 3:
+			this->fm = new HashManipulator(this->fileName);
 			break;
 	}
 
