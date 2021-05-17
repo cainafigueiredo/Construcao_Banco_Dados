@@ -224,24 +224,29 @@ int HashManipulator::findWhereEqual(string attribute, double value)
     HashFixedRecord record;
     HashHeader head;
     vector<HashFixedRecord> records;
-    int attr, blocksAccessed, i;
+    int attr, blocksAccessed,  i;
     bool found = false;
     map<string, int> m = this->createMap();
     attr = m[attribute];
     
-    int bucket_id, block_addr, n_recordsInBlock, firstRecordAddr;
-
     this->openForReading();
     this->fileRead.read((char *) &head, sizeof(head));
 
+    int bucket_id, block_addr, n_recordsInBlock, n_recordsInBucket, n_overflowRecords, recordAddr;
+    int overflow_record_block_addr, overflow_record_block_offset;
+
     blocksAccessed = 0;
 
+    // Procurando pelos registros nos blocos mapeados pelos buckets.
     for (bucket_id = 0; bucket_id < NUMBER_OF_BUCKETS; bucket_id++)
-    {
+    {        
         block_addr = head.buckets[bucket_id].block_addr;
-        n_recordsInBlock = head.buckets[bucket_id].numberOfRecords;
-        firstRecordAddr = (block_addr * head.blockSize);
-        this->fileRead.seekg(sizeof(head) + firstRecordAddr);
+        n_recordsInBucket = head.buckets[bucket_id].numberOfRecords;
+        n_overflowRecords = (n_recordsInBucket <= head.getBlockingFactor()) ? 0 : n_recordsInBucket % head.getBlockingFactor();
+        n_recordsInBlock = n_recordsInBucket - n_overflowRecords; 
+        
+        recordAddr = (block_addr * head.blockSize);
+        this->fileRead.seekg(sizeof(head) + recordAddr);
 
         for (int i = 0; i < n_recordsInBlock; i++) {
             this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
@@ -261,7 +266,33 @@ int HashManipulator::findWhereEqual(string attribute, double value)
             }
         }
     }
-    
+
+    // Procurando pelos registros nos blocos de overflow.
+    for (int OFRecord = 0; OFRecord < head.numberOfOverflowRecords; OFRecord++)
+    {        
+        overflow_record_block_addr = (NUMBER_OF_BUCKETS) + (head.numberOfOverflowRecords / head.getBlockingFactor());
+        overflow_record_block_offset = head.numberOfOverflowRecords % head.getBlockingFactor();
+        
+        recordAddr = (overflow_record_block_addr * head.blockSize) + (overflow_record_block_offset * sizeof(record));
+        this->fileRead.seekg(sizeof(head) + recordAddr);
+
+        this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
+        blocksAccessed++;
+
+        switch (attr)
+        {
+            case 6: /*cod_esc*/
+                if (record.cod_esc == value)
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            default:
+                return -1;
+        }
+    }
+
     if (!found)
     {
         return -1;
@@ -272,36 +303,40 @@ int HashManipulator::findWhereEqual(string attribute, double value)
     {
         this->printRecord(r);
     }
-
     cout << "Blocks Acessed: " << blocksAccessed << endl;
-   
+
     this->closeForReading();
-    return 0;
-   
+    return 0;    
 }
+
 int HashManipulator::findWhereEqual(string attribute, string value)
 {
     HashFixedRecord record;
     HashHeader head;
     vector<HashFixedRecord> records;
-    int attr, blocksAccessed, i;
+    int attr, blocksAccessed,  i;
     bool found = false;
     map<string, int> m = this->createMap();
     attr = m[attribute];
     
-    int bucket_id, block_addr, n_recordsInBlock, firstRecordAddr;
-
     this->openForReading();
     this->fileRead.read((char *) &head, sizeof(head));
-    cout << value;
+
+    int bucket_id, block_addr, n_recordsInBlock, n_recordsInBucket, n_overflowRecords, recordAddr;
+    int overflow_record_block_addr, overflow_record_block_offset;
+
     blocksAccessed = 0;
 
+    // Procurando pelos registros nos blocos mapeados pelos buckets.
     for (bucket_id = 0; bucket_id < NUMBER_OF_BUCKETS; bucket_id++)
-    {
+    {        
         block_addr = head.buckets[bucket_id].block_addr;
-        n_recordsInBlock = head.buckets[bucket_id].numberOfRecords;
-        firstRecordAddr = (block_addr * head.blockSize);
-        this->fileRead.seekg(sizeof(head) + firstRecordAddr);
+        n_recordsInBucket = head.buckets[bucket_id].numberOfRecords;
+        n_overflowRecords = (n_recordsInBucket <= head.getBlockingFactor()) ? 0 : n_recordsInBucket % head.getBlockingFactor();
+        n_recordsInBlock = n_recordsInBucket - n_overflowRecords; 
+        
+        recordAddr = (block_addr * head.blockSize);
+        this->fileRead.seekg(sizeof(head) + recordAddr);
 
         for (int i = 0; i < n_recordsInBlock; i++) {
             this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
@@ -356,7 +391,68 @@ int HashManipulator::findWhereEqual(string attribute, string value)
             }
         }
     }
-    
+
+    // Procurando pelos registros nos blocos de overflow.
+    for (int OFRecord = 0; OFRecord < head.numberOfOverflowRecords; OFRecord++)
+    {        
+        overflow_record_block_addr = (NUMBER_OF_BUCKETS) + (head.numberOfOverflowRecords / head.getBlockingFactor());
+        overflow_record_block_offset = head.numberOfOverflowRecords % head.getBlockingFactor();
+        
+        recordAddr = (overflow_record_block_addr * head.blockSize) + (overflow_record_block_offset * sizeof(record));
+        this->fileRead.seekg(sizeof(head) + recordAddr);
+
+        this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
+        blocksAccessed++;
+
+        switch (attr)
+        {
+            case 1: /*nomedep*/
+                if (string(record.nomedep).compare(value) == 0)
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            case 2: /*de*/
+                if (string(record.de).compare(value) == 0)
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            case 3: /*distr*/
+                if (string(record.distr).compare(value) == 0)
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            case 4: /*mun*/
+                if (string (record.mun).compare(value) == 0)
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            case 7: /*nomesc*/
+                if (string (record.nomesc).compare(value) == 0)
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            case 8: /*ds_pais*/
+                if (string (record.ds_pais).compare(value) == 0)
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            default:
+                return -1;
+        }
+    }
+
     if (!found)
     {
         return -1;
@@ -367,11 +463,10 @@ int HashManipulator::findWhereEqual(string attribute, string value)
     {
         this->printRecord(r);
     }
-
     cout << "Blocks Acessed: " << blocksAccessed << endl;
-   
+
     this->closeForReading();
-    return 0;
+    return 0;    
 }
 
 int HashManipulator::findWhereBetween (string attribute, int value1, int value2)
