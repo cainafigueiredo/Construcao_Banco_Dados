@@ -13,13 +13,16 @@ int main ()
 {
     char fileName[MAX_STRING_SIZE] = "teste.csv";
     char newFileName[MAX_STRING_SIZE] = "newFile_teste";
-    char orderField[MAX_STRING_SIZE] = "some_field";
+    char orderField[MAX_STRING_SIZE] = "COD_ESC";
     
     orderedFileCreator<char[MAX_ORDERED_FIELD_SIZE]> a (fileName, newFileName,orderField);
     orderedManipulator teste("newFile_teste");
     a.insertRecords();
     a.getHeader();
     a.printHeader();
-    teste.findOne(3);
+    double t = 31100;
+    teste.findWhereEqual("COD_ESC", t);
+    
+
     return 0;
 }

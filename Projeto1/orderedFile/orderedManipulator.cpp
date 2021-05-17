@@ -23,6 +23,297 @@ int orderedManipulator::insertHeader(orderedHeader <char[MAX_ORDERED_FIELD_SIZE]
     return 0;
 }
 
+int orderedManipulator::comparator (int a, int b){
+    if (a>b){return 1;}
+    if (a==b){return 0;}
+    return -1;
+}
+
+int orderedManipulator::comparator (double a, double b){
+    if (a>b){return 1;}
+    if (a==b){return 0;}
+    return -1;
+}
+
+int orderedManipulator::comparator (string a, string b){
+    int cmp = strcmp( a.c_str() ,b.c_str());
+    if (cmp>0){return 1;}
+    if (cmp==0){return 0;}
+    return -1;
+}
+
+int orderedManipulator::binarySearcher(int value){
+    int attr, blocksAccessed,  i, med, pos;
+    orderedHeader<char[MAX_ORDERED_FIELD_SIZE]> head;
+    bool found = false;
+    map<string, int> m = this->createMap();
+    this->openForReading();
+    this->fileRead.read((char *) &head, sizeof(head));
+    attr = m[head.ordered_by];
+    FixedRecord recordLow, recordMed, recordHigh;
+    int inf = 0;
+
+    this->fileRead.seekg(0, ios::end);
+    int sup = ((int)this->fileRead.tellg()-(head.headerSize))/sizeof(recordHigh)-1; //index of last element
+
+
+    i = 0;
+    while (i<999999999){
+        i++;
+
+        med = (inf+sup)/2;
+        this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+        this->fileRead.read((char *) &recordLow, head.recordSize);
+        this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+        this->fileRead.read((char *) &recordMed, head.recordSize);
+        this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
+        this->fileRead.read((char *) &recordHigh, head.recordSize);
+        switch (attr)
+        {
+            case 0: /*id*/
+                if (recordHigh.id == -1){sup = sup-1; break;}
+                if (recordLow.id == -1){inf = inf-1; break;}
+                if (recordMed.id == -1){
+                    if(!orderedManipulator::comparator(recordLow.id, value)){ return inf;}
+                    inf=inf+1;
+                    break;}
+                if(!orderedManipulator::comparator(recordHigh.id, value)){ return sup;}
+                if(!orderedManipulator::comparator(recordLow.id, value)){ return inf;}
+                if(!orderedManipulator::comparator(recordMed.id, value)){ return med;}
+                if ((med == sup)||(sup == inf )){ return -1;}
+                pos = orderedManipulator::comparator(recordMed.id, value) ;
+                if(pos == 1){sup = med;}
+                else {inf = med;}
+                break;
+            case 5: /*tipoesc*/
+                if (recordHigh.tipoesc == -1){sup = sup-1; break;}
+                if (recordLow.tipoesc == -1){inf = inf-1; break;}
+                if (recordMed.tipoesc == -1){
+                    if(!orderedManipulator::comparator(recordLow.tipoesc, value)){ return inf;}
+                    inf=inf+1;
+                    break;}
+                if(!orderedManipulator::comparator(recordHigh.tipoesc, value)){ return sup;}
+                if(!orderedManipulator::comparator(recordLow.tipoesc, value)){ return inf;}
+                if(!orderedManipulator::comparator(recordMed.tipoesc, value)){ return med;}
+                if ((med == sup)||(sup == inf )){ return -1;}
+                pos = orderedManipulator::comparator(recordMed.tipoesc, value) ;
+                if(pos == 1){sup = med;}
+                else {inf = med;}
+                break;
+            case 9: /*n_alunos*/
+                if (recordHigh.n_alunos == -1){sup = sup-1; break;}
+                if (recordLow.n_alunos == -1){inf = inf-1; break;}
+                if (recordMed.n_alunos == -1){
+                    if(!orderedManipulator::comparator(recordLow.n_alunos, value)){ return inf;}
+                    inf=inf+1;
+                    break;}
+                if(!orderedManipulator::comparator(recordHigh.n_alunos, value)){ return sup;}
+                if(!orderedManipulator::comparator(recordLow.n_alunos, value)){ return inf;}
+                if(!orderedManipulator::comparator(recordMed.n_alunos, value)){ return med;}
+                if ((med == sup)||(sup == inf )){ return -1;}
+                pos = orderedManipulator::comparator(recordMed.n_alunos, value) ;
+                if(pos == 1){sup = med;}
+                else {inf = med;}
+                break;
+            default:    
+                return -1;
+        }
+
+
+
+    }
+    return -1;
+}
+
+int orderedManipulator::binarySearcher(double value){
+    int attr, blocksAccessed,  i, med, pos;
+    orderedHeader<char[MAX_ORDERED_FIELD_SIZE]> head;
+    bool found = false;
+    map<string, int> m = this->createMap();
+    this->openForReading();
+    this->fileRead.read((char *) &head, sizeof(head));
+    attr = m[head.ordered_by];
+    FixedRecord recordLow, recordMed, recordHigh;
+    int inf = 0;
+
+    this->fileRead.seekg(0, ios::end);
+    int sup = ((int)this->fileRead.tellg()-(head.headerSize))/sizeof(recordHigh)-1; //index of last element
+
+
+    i = 0;
+    while (i<999999999){
+        i++;
+
+        med = (inf+sup)/2;
+        this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+        this->fileRead.read((char *) &recordLow, head.recordSize);
+        this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+        this->fileRead.read((char *) &recordMed, head.recordSize);
+        this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
+        this->fileRead.read((char *) &recordHigh, head.recordSize);
+        switch (attr)
+        {
+            case 6: /*cod_esc*/
+                if (recordHigh.cod_esc == -1.0){sup = sup-1; break;}
+                if (recordLow.cod_esc == -1.0){inf = inf-1; break;}
+                if (recordMed.cod_esc == -1.0){
+                    if(!orderedManipulator::comparator(recordLow.cod_esc, value)){ return inf;}
+                    inf=inf+1;
+                    break;}
+                if(!orderedManipulator::comparator(recordHigh.cod_esc, value)){ return sup;}
+                if(!orderedManipulator::comparator(recordLow.cod_esc, value)){ return inf;}
+                if(!orderedManipulator::comparator(recordMed.cod_esc, value)){ return med;}
+                if ((med == sup)||(sup == inf )){ return -1;}
+                pos = orderedManipulator::comparator(recordMed.cod_esc, value) ;
+                if(pos == 1){sup = med;}
+                else {inf = med;}
+               break;
+            default:    
+                return -1;
+        }
+
+
+
+    }
+    return -1;
+}
+
+int orderedManipulator::binarySearcher(string value){
+    int attr, blocksAccessed,  i, med, pos;
+    orderedHeader<char[MAX_ORDERED_FIELD_SIZE]> head;
+    bool found = false;
+    map<string, int> m = this->createMap();
+    this->openForReading();
+    this->fileRead.read((char *) &head, sizeof(head));
+    attr = m[head.ordered_by];
+    FixedRecord recordLow, recordMed, recordHigh;
+    int inf = 0;
+
+    this->fileRead.seekg(0, ios::end);
+    int sup = ((int)this->fileRead.tellg()-(head.headerSize))/sizeof(recordHigh)-1; //index of last element
+
+
+
+
+
+    i = 0;
+
+
+
+
+    while (i<99999999){
+        i++;
+        med = (inf+sup)/2;
+
+        this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+        this->fileRead.read((char *) &recordLow, head.recordSize);
+        this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+        this->fileRead.read((char *) &recordMed, head.recordSize);
+        this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
+        this->fileRead.read((char *) &recordHigh, head.recordSize);
+        switch (attr)
+       {
+            case 1: /*nomedep*/
+                if (!orderedManipulator::comparator(recordHigh.nomedep, "DELETED")){sup = sup-1; break;}
+                if (!orderedManipulator::comparator(recordLow.nomedep, "DELETED")){inf = inf-1; break;}
+                if (!orderedManipulator::comparator(recordMed.nomedep, "DELETED")){
+                    if(!orderedManipulator::comparator(recordLow.nomedep, value)){ return inf;}
+                    inf=inf+1;
+                    break;}
+                if(!orderedManipulator::comparator(recordHigh.nomedep, value)){ return sup;}
+                if(!orderedManipulator::comparator(recordLow.nomedep, value)){ return inf;}
+                if(!orderedManipulator::comparator(recordMed.nomedep, value)){ return med;}
+                if ((med == sup)||(sup == inf )){ return -1;}
+                pos = orderedManipulator::comparator(recordMed.nomedep, value) ;
+                if(pos == 1){sup = med;}
+                else {inf = med;}
+                break;
+            case 2: /*de*/
+                if (!orderedManipulator::comparator(recordHigh.de, "DELETED")){sup = sup-1; break;}
+                if (!orderedManipulator::comparator(recordLow.de, "DELETED")){inf = inf-1; break;}
+                if (!orderedManipulator::comparator(recordMed.de, "DELETED")){
+                    if(!orderedManipulator::comparator(recordLow.de, value)){ return inf;}
+                    inf=inf+1;
+                    break;}
+                if(!orderedManipulator::comparator(recordHigh.de, value)){ return sup;}
+                if(!orderedManipulator::comparator(recordLow.de, value)){ return inf;}
+                if(!orderedManipulator::comparator(recordMed.de, value)){ return med;}
+                if ((med == sup)||(sup == inf )){ return -1;}
+                pos = orderedManipulator::comparator(recordMed.de, value) ;
+                if(pos == 1){sup = med;}
+                else {inf = med;}
+                break;
+            case 3: /*distr*/
+                if (!orderedManipulator::comparator(recordHigh.distr, "DELETED")){sup = sup-1; break;}
+                if (!orderedManipulator::comparator(recordLow.distr, "DELETED")){inf = inf-1; break;}
+               if (!orderedManipulator::comparator(recordMed.distr, "DELETED")){
+                    if(!orderedManipulator::comparator(recordLow.distr, value)){ return inf;}
+                    inf=inf+1;
+                    break;}
+                if(!orderedManipulator::comparator(recordHigh.distr, value)){ return sup;}
+                if(!orderedManipulator::comparator(recordLow.distr, value)){ return inf;}
+                if(!orderedManipulator::comparator(recordMed.distr, value)){ return med;}
+                if ((med == sup)||(sup == inf )){ return -1;}
+                pos = orderedManipulator::comparator(recordMed.distr, value) ;
+                if(pos == 1){sup = med;}
+                else {inf = med;}
+                break;
+            case 4: /*mun*/
+                if (!orderedManipulator::comparator(recordHigh.mun, "DELETED")){sup = sup-1; break;}
+                if (!orderedManipulator::comparator(recordLow.mun, "DELETED")){inf = inf-1; break;}
+                if (!orderedManipulator::comparator(recordMed.mun, "DELETED")){
+                    if(!orderedManipulator::comparator(recordLow.mun, value)){ return inf;}
+                    inf=inf+1;
+                    break;}
+                if(!orderedManipulator::comparator(recordHigh.mun, value)){ return sup;}
+                if(!orderedManipulator::comparator(recordLow.mun, value)){ return inf;}
+                if(!orderedManipulator::comparator(recordMed.mun, value)){ return med;}
+                if ((med == sup)||(sup == inf )){ return -1;}
+                pos = orderedManipulator::comparator(recordMed.mun, value) ;
+                if(pos == 1){sup = med;}
+                else {inf = med;}
+                break;
+            case 7: /*nomesc*/
+                if (!orderedManipulator::comparator(recordHigh.nomesc, "DELETED")){sup = sup-1; break;}
+                if (!orderedManipulator::comparator(recordLow.nomesc, "DELETED")){inf = inf-1; break;}
+                if (!orderedManipulator::comparator(recordMed.nomesc, "DELETED")){ 
+                    if(!orderedManipulator::comparator(recordLow.nomesc, value)){ return inf;}
+                    inf=inf+1;
+                    break;}
+                if(!orderedManipulator::comparator(recordHigh.nomesc, value)){ return sup;}
+                if(!orderedManipulator::comparator(recordLow.nomesc, value)){ return inf;}
+                if(!orderedManipulator::comparator(recordMed.nomesc, value)){ return med;}
+                if ((med == sup)||(sup == inf )){ return -1;}
+                pos = orderedManipulator::comparator(recordMed.nomesc, value) ;
+                if(pos == 1){sup = med;}
+                else {inf = med;}
+                break;
+            case 8: /*ds_pais*/
+                if (!orderedManipulator::comparator(recordHigh.ds_pais, "DELETED")){sup = sup-1; break;}
+                if (!orderedManipulator::comparator(recordLow.ds_pais, "DELETED")){inf = inf-1; break;}
+                if (!orderedManipulator::comparator(recordMed.ds_pais, "DELETED")){
+                    if(!orderedManipulator::comparator(recordLow.ds_pais, value)){ return inf;}
+                    inf=inf+1;
+                    break;}
+                if(!orderedManipulator::comparator(recordHigh.ds_pais, value)){ return sup;}
+                if(!orderedManipulator::comparator(recordLow.ds_pais, value)){ return inf;}
+                if(!orderedManipulator::comparator(recordMed.ds_pais, value)){ return med;}
+                if ((med == sup)||(sup == inf )){ return -1;}
+                pos = orderedManipulator::comparator(recordMed.ds_pais, value) ;
+                if(pos == 1){sup = med;}
+                else {inf = med;}
+                break;
+            default:    
+                return -1;
+        }
+
+
+
+    }
+    return -1;
+}
+
+
 int orderedManipulator::findOne(int id)
 {
     FixedRecord record;
@@ -31,28 +322,46 @@ int orderedManipulator::findOne(int id)
     bool found = false;
     this->openForReading();
     this->fileRead.read((char *) &head, sizeof(head));
-    for (int i = 0; i < head.recordsAmount; i++)
-    {
-        this->fileRead.read((char *) &record, sizeof(FixedRecord));
-        if (record.id == id)
-        {
-            blocksAccessed = i+1;
-            i = head.recordsAmount;
-            found = true;
-        }
-    }
-
-    if (!found)
-    {
-        return -1;
-    }
-    this->printSchema();
-    this->printRecord(record);
-    cout << "Blocks Acessed: " << blocksAccessed << endl;
     this->closeForReading();
+    if (!orderedManipulator::comparator(head.ordered_by, "id")){
+        int ind = orderedManipulator::binarySearcher(id);
+        if (id == -1){return -1;}
+        this->fileRead.seekg(head.headerSize + ind * head.recordSize,ios::beg);
+        this->fileRead.read((char *) &record, sizeof(FixedRecord));
+        this->printSchema();
+        this->printRecord(record);
+        //cout << "Blocks Acessed: " << blocksAccessed << endl;
+        this->closeForReading();
+        return 0;
+    }
+    else{
+        this->openForReading();
+        this->fileRead.seekg(head.headerSize,ios::beg);
+        for (int i = 0; i < head.recordsAmount; i++)
+        {   this->fileRead.read((char *) &record, sizeof(FixedRecord));
+            if (record.id == id)
+            {
+                blocksAccessed = i+1;
+                i = head.recordsAmount;
+                found = true;
+            }
+        }
 
-    return 0;
+        if (!found)
+        {
+            return -1;
+        }
+        this->printSchema();
+        this->printRecord(record);
+        cout << "Blocks Acessed: " << blocksAccessed << endl;
+        this->closeForReading();
+
+        return 0;
+    }
+    return -1;
 }
+
+
 
 int orderedManipulator::findWhereEqual(string attribute, int value)
 {
@@ -63,40 +372,141 @@ int orderedManipulator::findWhereEqual(string attribute, int value)
     bool found = false;
     map<string, int> m = this->createMap();
     attr = m[attribute];
-    
     this->openForReading();
     this->fileRead.read((char *) &head, sizeof(head));
-    for (i = 0; i < head.recordsAmount; i++)
-    {
-        this->fileRead.read((char *) &record, sizeof(FixedRecord));
-        switch (attr)
+
+
+    this->fileRead.seekg(0, ios::end);
+    int sup = ((int)this->fileRead.tellg()-(head.headerSize))/sizeof(record)-1; //index of last element
+
+    int atord = m[head.ordered_by];
+    atord = m[head.ordered_by];
+
+    if (atord == attr){
+        this->closeForReading();
+        int index = orderedManipulator::binarySearcher(value);
+        
+        this->fileRead.seekg(head.headerSize + index * head.recordSize,ios::beg);
+        this->fileRead.read((char *) &record, head.recordSize);
+        records.push_back(record);
+
+        int setBreak = false;
+        int i = index;
+        while (i< sup){
+            if (setBreak == true) {break;}
+            i++;
+            this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
+            this->fileRead.read((char *) &record, head.recordSize);
+
+            switch (attr)
+            {
+                case 0: /*id*/
+                    if (record.id == value)
+                    {
+                        records.push_back(record);
+                    }
+                    else if (record.id != -1) {setBreak = true;}
+                    found = true;
+                    break;
+                case 5: /*tipoesc*/
+                    if (record.tipoesc == value)
+                    {
+                        records.push_back(record);
+                    }
+                    else if (record.tipoesc != -1) {setBreak = true;}
+                    found = true;
+                    break;
+                case 9: /*n_alunos*/
+                    if (record.n_alunos == value)
+                    {
+                        records.push_back(record);
+                    }
+                    else if (record.n_alunos != -1) {setBreak = true;}
+                    found = true;
+                    break;
+                default:
+                    return -1;
+            }
+
+
+            
+        }
+        i = index;
+        setBreak = false;
+        while (i>0){
+            if (setBreak == true) {break;}
+            i--;
+            this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
+            this->fileRead.read((char *) &record, head.recordSize);
+            switch (attr)
+            {
+                case 0: /*id*/
+                    if (record.id == value)
+                    {
+                        records.push_back(record);
+                    }
+                    else if (record.id != -1) {setBreak = true;}
+                    found = true;
+                    break;
+                case 5: /*tipoesc*/
+                    if (record.tipoesc == value)
+                    {
+                        records.push_back(record);
+                    }
+                    else if (record.tipoesc != -1) {setBreak = true;}
+                    found = true;
+                    break;
+                case 9: /*n_alunos*/
+                    if (record.n_alunos == value)
+                    {
+                        records.push_back(record);
+                    }
+                    else if (record.n_alunos != -1) {setBreak = true;}
+                    found = true;
+                    break;
+                default:
+                    return -1;
+            }
+
+
+            
+        }
+        this->closeForReading();
+    }
+    else{
+        this->fileRead.seekg(sizeof(head), ios::beg);
+        for (i = 0; i < head.recordsAmount; i++)
         {
-            case 0: /*id*/
-                if (record.id == value)
-                {
-                    records.push_back(record);
-                }
-                found = true;
-                break;
-            case 5: /*tipoesc*/
-                if (record.tipoesc == value)
-                {
-                    records.push_back(record);
-                }
-                found = true;
-                break;
-            case 9: /*n_alunos*/
-                if (record.n_alunos == value)
-                {
-                    records.push_back(record);
-                }
-                found = true;
-                break;
-            default:
-                return -1;
+            this->fileRead.read((char *) &record, sizeof(FixedRecord));
+            switch (attr)
+            {
+                case 0: /*id*/
+                    if (record.id == value)
+                    {
+                        records.push_back(record);
+                    }
+                    found = true;
+                    break;
+                case 5: /*tipoesc*/
+                    if (record.tipoesc == value)
+                    {
+                        records.push_back(record);
+                        
+                    }
+                    found = true;
+                    break;
+                case 9: /*n_alunos*/
+                    if (record.n_alunos == value)
+                    {
+                        records.push_back(record);
+                    }
+                    found = true;
+                    break;
+                default:
+                    return -1;
+            }
         }
     }
-
     blocksAccessed = i;
 
     if (!found)
@@ -109,42 +519,113 @@ int orderedManipulator::findWhereEqual(string attribute, int value)
     {
         this->printRecord(r);
     }
-    cout << "Blocks Acessed: " << blocksAccessed << endl;
+    //cout << "Blocks Acessed: " << blocksAccessed << endl;
 
     this->closeForReading();
     return 0;
     
+
 }
+
 int orderedManipulator::findWhereEqual(string attribute, double value)
 {
     FixedRecord record;
     orderedHeader <char[MAX_ORDERED_FIELD_SIZE]>head;
     vector<FixedRecord> records;
-    int attr, blocksAccessed, i;
+    int attr, blocksAccessed,  i;
     bool found = false;
     map<string, int> m = this->createMap();
     attr = m[attribute];
-    
     this->openForReading();
     this->fileRead.read((char *) &head, sizeof(head));
-    for (i = 0; i < head.recordsAmount; i++)
-    {
-        this->fileRead.read((char *) &record, sizeof(FixedRecord));
-        switch (attr)
+
+
+    this->fileRead.seekg(0, ios::end);
+    int sup = ((int)this->fileRead.tellg()-(head.headerSize))/sizeof(record)-1; //index of last element
+
+    int atord = m[head.ordered_by];
+    atord = m[head.ordered_by];
+
+    if (atord == attr){
+        this->closeForReading();
+        int index = orderedManipulator::binarySearcher(value);
+        
+        this->fileRead.seekg(head.headerSize + index * head.recordSize,ios::beg);
+        this->fileRead.read((char *) &record, head.recordSize);
+        records.push_back(record);
+
+        int setBreak = false;
+        int i = index;
+        while (i< sup){
+            if (setBreak == true) {break;}
+            i++;
+            this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
+            this->fileRead.read((char *) &record, head.recordSize);
+
+            switch (attr)
+            {
+                case 6: 
+                    if (record.cod_esc == value)
+                    {
+                        records.push_back(record);
+                    }
+                    else if (record.cod_esc != -1) {setBreak = true;}
+                    found = true;
+                    break;
+                default:
+                    return -1;
+            }
+
+
+            
+        }
+        i = index;
+        setBreak = false;
+        while (i>0){
+            if (setBreak == true) {break;}
+            i--;
+            this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
+            this->fileRead.read((char *) &record, head.recordSize);
+            switch (attr)
+            {
+                case 6: 
+                    if (record.cod_esc == value)
+                    {
+                        records.push_back(record);
+                    }
+                    else if (record.cod_esc != -1) {setBreak = true;}
+                    found = true;
+                    break;
+                default:
+                    return -1;
+            }
+
+
+            
+        }
+        this->closeForReading();
+    }
+    else{
+        this->fileRead.seekg(sizeof(head), ios::beg);
+        for (i = 0; i < head.recordsAmount; i++)
         {
-            case 6: /*cod_esc*/
-                if (record.cod_esc == value)
-                {
-                    records.push_back(record);
-                }
-                found = true;
-                break;
-            default:
-                return -1;
+            this->fileRead.read((char *) &record, sizeof(FixedRecord));
+            switch (attr)
+            {
+                case 6: 
+                    if (record.cod_esc == value)
+                    {
+                        records.push_back(record);
+                    }
+                    found = true;
+                    break;
+                default:
+                    return -1;
+            }
         }
     }
-    
     blocksAccessed = i;
+
     if (!found)
     {
         return -1;
@@ -155,13 +636,14 @@ int orderedManipulator::findWhereEqual(string attribute, double value)
     {
         this->printRecord(r);
     }
+    //cout << "Blocks Acessed: " << blocksAccessed << endl;
 
-    cout << "Blocks Acessed: " << blocksAccessed << endl;
-   
     this->closeForReading();
     return 0;
-   
+    
+
 }
+
 int orderedManipulator::findWhereEqual(string attribute, string value)
 {
     FixedRecord record;
