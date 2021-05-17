@@ -5,6 +5,7 @@ HashHeader::HashHeader()
     this->headerSize = sizeof(*this);
     this->fileOrganization = 3; // 3 means Hash; ...
     this->recordSize = sizeof(HashFixedRecord);
+    this->numberOfDeletedRecords = 0;
 
     for (int i = 0; i < NUMBER_OF_BUCKETS; i++) {
         this->buckets[i].setBlockAddr(i);
@@ -28,4 +29,8 @@ void HashHeader::decrementNumberOfOverflowRecords() {
 
 int HashHeader::getBlockingFactor() {
     return (this->blockSize/this->recordSize);
+}
+
+int HashHeader::getNumberOfNotDeletedRecords() {
+    return (this->recordsAmount - this->numberOfDeletedRecords);
 }

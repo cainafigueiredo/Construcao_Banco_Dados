@@ -16,7 +16,6 @@ class HashManipulator : public FileManipulator
         
         int printRecord(HashFixedRecord r);
         int insertHeader(HashHeader head);
-        
 
         int findOne(int id);
         int findWhereEqual(string attribute, int value);
@@ -28,6 +27,5 @@ class HashManipulator : public FileManipulator
         int removeOne(int id);
         int removeBetween(string attribute, int value1, int value2);
         int removeBetween(string attribute, double value1, double value2);
-        int updateFreeListInsertDeleted (int offset, HashHeader head);
 };
 #endif

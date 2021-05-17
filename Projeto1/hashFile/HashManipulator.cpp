@@ -41,7 +41,7 @@ int HashManipulator::findOne(int id)
 
     // Se houver registros no bloco do bucket, então comece a buscar entre eles.
     if (n_recordsInBlock > 0) {
-
+    
         recordAddr = (block_addr * head.blockSize);
         this->fileRead.seekg(sizeof(head) + recordAddr);
 
@@ -50,7 +50,7 @@ int HashManipulator::findOne(int id)
             this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
             blocksAccessed++;
 
-            if (record.id == id) {
+            if (record.id == id && !record.deleted) {
                 found = true;
                 break;
             }
@@ -73,7 +73,7 @@ int HashManipulator::findOne(int id)
             blocksAccessed++;
             
             // Verificando se o registro é o que estamos procurando.
-            if (record.id == id) {
+            if (record.id == id && !record.deleted) {
                 found = true;
                 break;
             }
@@ -614,37 +614,151 @@ int HashManipulator::findWhereBetween(string attribute, double value1, double va
 
 int HashManipulator::removeOne(int id)
 {
-    HashHeader head;
-    HashFixedRecord record;
-    bool found = false;
-    int i;
-    int offset = 0;
 
+    /* 
+    Encontre o registro com o id solicitado
+    Se nenhum registro for encontrado, retorne -1
+    Caso contrário, seja R o endereço do registro encontrado
+    Adicione esse registro na lista encadeada de registros excluídos
+    Decremente o número de registros no bucket
+    Decremente o número de registros no arquivo de registros
+    Se R estiver na lista de overflow
+        Faça R_next ser o endereço do próximo registro na lista de overflow depois de R
+        Se R é o primeiro da lista de overflow
+            Atualiza o endereço do primeiro registro de overflow no bucket para R_next
+        Senão 
+            Faça R_prev ser o endereço do registro que precede R na lista de overflow
+            Atualiza o endereço do próximo registro de overflow em R_prev para R_next
+        Decremente o número de registros de overflow
+    */
+    HashFixedRecord record, last_record;
+    HashHeader head;
+    int bucket_id, block_addr, n_recordsInBucket, n_recordsInBlock, n_overflowRecords, recordAddr;
+    int blocksAccessed = 0;
+    bool found = false;
     this->openForReading();
-    this->fileRead.seekg(0, ios::beg);
     this->fileRead.read((char *) &head, sizeof(head));
-    offset += sizeof(head);
-    for (i = 0; i < head.recordsAmount; i++)
-    {
-        this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
-        if (record.id == id)
-        {
-            found = true;
-            break;
+    int foundRecordBlock, foundRecordOffset;
+
+    bucket_id = head.hashFunction(id);
+    block_addr = head.buckets[bucket_id].block_addr;
+    n_recordsInBucket = head.buckets[bucket_id].numberOfRecords;
+    n_overflowRecords = (n_recordsInBucket <= head.getBlockingFactor()) ? 0 : n_recordsInBucket % head.getBlockingFactor();
+    n_recordsInBlock = n_recordsInBucket - n_overflowRecords; 
+
+    // cout << "Records: " << n_recordsInBucket << "\n";
+
+    // Se houver registros no bloco do bucket, então comece a buscar entre eles.
+    if (n_recordsInBlock > 0) {
+
+        recordAddr = (block_addr * head.blockSize);
+        this->fileRead.seekg(sizeof(head) + recordAddr);
+
+        for (int i = 0; i < n_recordsInBlock; i++) {
+            // Procurando pelo registro no bloco mapeado pelo bucket.
+            this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
+            blocksAccessed++;
+
+            if (record.id == id) {
+                found = true;
+                record.deleted = true;
+                foundRecordBlock = block_addr;
+                foundRecordOffset = i;
+                break;
+            }
         }
-        offset += sizeof(HashFixedRecord);
     }
+
+    // Se houver registros de overflow no bucket, então comece a buscar entre eles.
+    if (n_overflowRecords > 0 && !found) {
+        int cur_overflow_record_block_addr = head.buckets[bucket_id].overflow.first_block_addr;
+        int cur_overflow_record_block_offset = head.buckets[bucket_id].overflow.first_block_offset;
+        int last_overflow_record_block_addr = -1;
+        int last_overflow_record_block_offset = -1;
+        // cout << cur_overflow_record_block_addr << " , " << cur_overflow_record_block_offset << "\n";  
+        while (cur_overflow_record_block_addr > 0) {
+            // Carrega o próximo registro de overflow.
+            recordAddr = (cur_overflow_record_block_addr * head.blockSize + cur_overflow_record_block_offset * sizeof(HashFixedRecord));
+            // cout << record.nomedep << "\n";
+            // cout << "\n\n" << recordAddr << "\n\n";
+            this->fileRead.seekg(sizeof(head) + recordAddr);
+            this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
+            // cout << "\n\n" << record.nextRecord_block_addr << " , " << record.nextRecord_block_offset << "\n\n";
+            blocksAccessed++;
+            
+            // Verificando se o registro é o que estamos procurando.
+            if (record.id == id) {
+                found = true;
+                record.deleted = true; 
+
+                foundRecordBlock = cur_overflow_record_block_addr;
+                foundRecordOffset = cur_overflow_record_block_offset;
+
+                // Se for o primeiro da lista de overflow, então altera o ponteiro do bucket
+                if (last_overflow_record_block_addr == -1) {
+                    head.buckets[bucket_id].overflow.first_block_addr = cur_overflow_record_block_addr;
+                    head.buckets[bucket_id].overflow.first_block_offset = cur_overflow_record_block_offset;
+                    head.buckets[bucket_id].overflow.last_block_addr = cur_overflow_record_block_addr;
+                    head.buckets[bucket_id].overflow.last_block_offset = cur_overflow_record_block_offset;
+                }
+                // Se não for o primeiro da lista de overflow, então altera o ponteiro do registro anterior
+                else {
+                    recordAddr = (last_overflow_record_block_addr * head.blockSize + last_overflow_record_block_offset * sizeof(HashFixedRecord));
+                    this->fileRead.seekg(sizeof(head) + recordAddr);
+                    this->fileRead.read((char *) &last_record, sizeof(HashFixedRecord));
+                    last_record.nextRecord_block_addr = record.nextRecord_block_addr;
+                    last_record.nextRecord_block_offset = record.nextRecord_block_offset;
+                    // Escrevendo o registro de volta no arquivo
+                    this->closeForReading();
+                    this->openForWriting();
+                    this->fileWrite.seekp(sizeof(head) + recordAddr);
+                    this->fileWrite.write((char *) &last_record, sizeof(HashFixedRecord));
+                    this->closeForWriting();
+                }
+
+                break;
+            }
+
+            // Carregando o próximo registro da lista de overflows.
+            last_overflow_record_block_addr = cur_overflow_record_block_addr;
+            last_overflow_record_block_offset = cur_overflow_record_block_offset;
+            cur_overflow_record_block_addr = record.nextRecord_block_addr;
+            cur_overflow_record_block_offset = record.nextRecord_block_offset;
+            // cout << cur_overflow_record_block_addr << " , " << cur_overflow_record_block_offset << "\n";  
+
+        };
+    }  
+    
 
     if (!found)
     {
+        cout << "Record " << id << " does not exist." << endl;
         return -1;
+    } else {
+        // Se foi encontrado, então também foi removido. Vamos atualizar o registro e as variáveis com 
+        // os números de registros
+        recordAddr = (foundRecordBlock * head.blockSize + foundRecordOffset * sizeof(HashFixedRecord));
+        this->openForWriting();
+        this->fileWrite.seekp(sizeof(head) + recordAddr);
+        this->fileWrite.write((char *) &record, sizeof(HashFixedRecord));
+        this->closeForWriting();
+
+        head.numberOfDeletedRecords++;
+        // head.decrementNumberOfOverflowRecords();
+        // head.decrementRecordsAmount();
+        // head.buckets[bucket_id].decrementNumberOfRecords();
+        cout << "Record " << id << " was removed." << endl;
     }
 
-    this->updateFreeListInsertDeleted(offset, head);
-   
+    //this->printSchema();
+    //this->printRecord(record);
+    cout << "Blocks Acessed: " << blocksAccessed << endl;
+    this->insertHeader(head);
+    this->closeForReading();
+
     return 0;
 }
-
+/*
 int HashManipulator::removeBetween(string attribute, int value1, int value2)
 {
     HashHeader head;
@@ -672,21 +786,21 @@ int HashManipulator::removeBetween(string attribute, int value1, int value2)
         this->closeForReading();
         switch (attr)
         {
-            case 0: /*id*/
+            case 0: // id
                 if (record.id >= value1 && record.id <= value2)
                 {
                     this->updateFreeListInsertDeleted(offset, head);
                     numDeleted++;
                 }
                 break;
-            case 5: /*tipoesc*/
+            case 5: // tipoesc
                 if (record.tipoesc >= value1 && record.tipoesc <= value2)
                 {
                     this->updateFreeListInsertDeleted(offset, head);
                     numDeleted++;
                 }
                 break;
-            case 9: /*n_alunos*/
+            case 9: // n_alunos
                 if (record.n_alunos >= value1 && record.n_alunos <= value2)
                 {
                     this->updateFreeListInsertDeleted(offset, head);
@@ -709,54 +823,4 @@ int HashManipulator::removeBetween(string attribute, double value1, double value
 {
  return 0;   
 }
-
-int HashManipulator::updateFreeListInsertDeleted(int offset, HashHeader head)
-{
-    HashFixedRecord deleted;
-    HashFixedRecord record;
-
-    int auxOffset;
-    deleted.makeDeleted();
-    /*storing offset for next element at n_alunos*/
-    if (head.freeList == -1)
-    {
-        head.freeList = offset;
-        deleted.n_alunos = -1;
-    }
-    else /*if there is a list of deleted blocks, find the last one*/
-    {
-        /*jump to the first*/
-        auxOffset = head.freeList;
-        this->openForReading();
-        do
-        {
-            this->fileRead.seekg(auxOffset, ios::beg);
-            this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
-            auxOffset = record.n_alunos;
-        } while (record.n_alunos != -1);
-        record.n_alunos = offset;
-        
-        /*get the position of the last record in the list, to overwrite it
-        with the new n_alunos info*/
-        this->fileRead.seekg(-sizeof(HashFixedRecord), ios::cur);
-        auxOffset = this->fileRead.tellg();
-        this->closeForReading();
-        
-        this->openForWriting();
-        this->fileWrite.seekp(auxOffset, ios::beg);
-        this->fileWrite.write((char *) &record, sizeof(record));
-        this->closeForWriting();
-
-    }
-
-    this->closeForReading();
-
-    this->openForWriting();
-    this->fileWrite.seekp(offset, ios::beg);
-    this->fileWrite.write( (char *) &deleted, sizeof(deleted));
-    this->closeForWriting();
-
-    this->insertHeader(head);
-    
-    return 0;
-}
+*/

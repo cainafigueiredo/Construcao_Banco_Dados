@@ -9,5 +9,6 @@ class HashFixedRecord : public FixedRecord
         HashFixedRecord();
         int nextRecord_block_addr;
         int nextRecord_block_offset;
+        bool deleted;
 };
 #endif

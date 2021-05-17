@@ -15,11 +15,12 @@ class HashHeader: public FileHeader
         int recordSize;
         Bucket * buckets = new Bucket[NUMBER_OF_BUCKETS];
         int numberOfOverflowRecords;
-        int freeList;
+        int numberOfDeletedRecords;
         int hashFunction(int primaryKey);
 		void incrementNumberOfOverflowRecords();
 		void decrementNumberOfOverflowRecords();
         int getBlockingFactor();
+        int getNumberOfNotDeletedRecords();
 };
 
 #endif

@@ -167,7 +167,7 @@ int HashFileCreator::insertRecords()
         this->header.incrementRecordsAmount();
         this->header.buckets[bucket_id].incrementNumberOfRecords();
     }
-    cout << "Number of records: " << this->header.recordsAmount << "\n";
+    //cout << "Number of records: " << this->header.recordsAmount << "\n";
     // cout << endl;
     this->closeRawFile();
     this->closeNewFileWriting();
