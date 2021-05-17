@@ -49,6 +49,7 @@ class FileManipulator
         virtual int findWhereBetween(string attribute, double value1, double value2){return 0;};
         virtual int removeOne(int id){return 0;};
         virtual int removeBetween(string attribute, int value1, int value2){return 0;};
+        virtual int removeBetween(string attribute, double value1, double value2){return 0;};
         // bool between (int attribute, int first, int last);
         // bool unique (int attribute, string value);
         // bool unique (int attribute, int value);

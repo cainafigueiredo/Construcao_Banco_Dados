@@ -892,5 +892,102 @@ int HashManipulator::removeBetween(string attribute, int value1, int value2)
 
 int HashManipulator::removeBetween(string attribute, double value1, double value2)
 {
- return 0;   
+    HashFixedRecord record;
+    HashHeader head;
+    int attr, blocksAccessed,  i;
+    bool found = false;
+    map<string, int> m = this->createMap();
+    attr = m[attribute];
+    
+    this->openForReading();
+    this->fileRead.read((char *) &head, sizeof(head));
+
+    int bucket_id, block_addr, n_recordsInBlock, n_recordsInBucket, n_overflowRecords, recordAddr;
+    int overflow_record_block_addr, overflow_record_block_offset;
+    bool toRemove = false;
+    blocksAccessed = 0;
+
+    // Procurando pelos registros nos blocos mapeados pelos buckets.
+    for (bucket_id = 0; bucket_id < NUMBER_OF_BUCKETS; bucket_id++)
+    {        
+        block_addr = head.buckets[bucket_id].block_addr;
+        n_recordsInBucket = head.buckets[bucket_id].numberOfRecords;
+        n_overflowRecords = (n_recordsInBucket <= head.getBlockingFactor()) ? 0 : n_recordsInBucket % head.getBlockingFactor();
+        n_recordsInBlock = n_recordsInBucket - n_overflowRecords; 
+        
+        recordAddr = (block_addr * head.blockSize);
+        this->fileRead.seekg(sizeof(head) + recordAddr);
+
+        for (int i = 0; i < n_recordsInBlock; i++) {
+            this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
+            blocksAccessed++;
+        
+            switch (attr)
+            {
+                case 6: /*cod_esc*/
+                    if (record.cod_esc >= value1 && record.cod_esc <= value2)
+                    {
+                        found = true;
+                        toRemove = true;
+                    }
+                    break;
+                default:
+                    return -1;
+            }
+
+            if (toRemove) {
+                toRemove = false;
+                int previousReadPointer = this->fileRead.tellg();
+                this->closeForReading();
+                this->removeOne(record.id);
+                this->openForReading();
+                this->fileRead.seekg(previousReadPointer);
+            }
+        }
+    }
+
+    // Procurando pelos registros nos blocos de overflow.
+    for (int OFRecord = 0; OFRecord < head.numberOfOverflowRecords; OFRecord++)
+    {        
+        overflow_record_block_addr = (NUMBER_OF_BUCKETS) + (head.numberOfOverflowRecords / head.getBlockingFactor());
+        overflow_record_block_offset = head.numberOfOverflowRecords % head.getBlockingFactor();
+        
+        recordAddr = (overflow_record_block_addr * head.blockSize) + (overflow_record_block_offset * sizeof(record));
+        this->fileRead.seekg(sizeof(head) + recordAddr);
+
+        this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
+        blocksAccessed++;
+
+        switch (attr)
+        {
+            case 6: /*cod_esc*/
+                if (record.cod_esc >= value1 && record.cod_esc <= value2)
+                {
+                    found = true;
+                    toRemove = true;
+                }
+                break;
+            default:
+                return -1;
+        }
+
+        if (toRemove) {
+            toRemove = false;
+            int previousReadPointer = this->fileRead.tellg();
+            this->closeForReading();
+            this->removeOne(record.id);
+            this->openForReading();
+            this->fileRead.seekg(previousReadPointer);
+        }
+    }
+
+    if (!found)
+    {
+        return -1;
+    }
+
+    //cout << "Blocks Acessed: " << blocksAccessed << endl;
+
+    this->closeForReading();
+    return 0;
 }
