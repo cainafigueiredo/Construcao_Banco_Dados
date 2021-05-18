@@ -13,7 +13,7 @@ int main ()
 {
     char fileName[MAX_STRING_SIZE] = "teste.csv";
     char newFileName[MAX_STRING_SIZE] = "newFile_teste";
-    char orderField[MAX_STRING_SIZE] = "id";
+    char orderField[MAX_STRING_SIZE] = "TIPOESC";
     
     orderedFileCreator<char[MAX_ORDERED_FIELD_SIZE]> a (fileName, newFileName,orderField);
     orderedManipulator teste("newFile_teste");
