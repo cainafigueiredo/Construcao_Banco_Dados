@@ -6,7 +6,8 @@
 #include "../FixedRecord.h"
 #include "../FileHeader.h"
 #include <vector>
-#define MAX_SIZE_IN_MEM 4096
+#include <regex>
+#define MAX_SIZE_IN_MEM 1920
 
 using namespace std;
 class wrapper
@@ -21,7 +22,7 @@ class wrapper
     }
 };
 
-vector<wrapper> make_wrapper_buffer(FixedRecord *buff,int order);
+vector<wrapper> make_wrapper_buffer(vector<FixedRecord>buff,int order);
 
 //checa se a.r->attribute < b.r->attribute
 bool compare_records(wrapper &a,wrapper &b);
@@ -45,10 +46,18 @@ class orderedManipulator : public FileManipulator
             cout<<this->ordered_by<<endl;  
             this->currPos = 0;
         };
-        void writeBufferToTempFile(vector<wrapper> buffer,orderedHeader<char[MAX_ORDERED_FIELD_SIZE]> *head = NULL);
+        void writeBufferToTempFile(vector<wrapper> buffer,
+        orderedHeader<char[MAX_ORDERED_FIELD_SIZE]> *head = NULL, string filename = "");
         FixedRecord *findNext();
         int createTempFile(string fileName);
-        void ordenateFile();
+        void ordenateFile(string fileName);
+        void ordernateInRAM(string fileName);
+        void breakFileInNparts(string fileName,orderedHeader<char[MAX_ORDERED_FIELD_SIZE]> *head,
+        vector<int>*total_per_file);
+        void mergeNFiles(string path,orderedHeader<char[MAX_ORDERED_FIELD_SIZE]>*head,string pattern,
+        vector<int>*total_per_file);
+        FixedRecord* pickOrdered(map<int,int>*recToFile,vector<ifstream*>*inputFiles,
+        vector<wrapper>*wp,int *totalOpenedFiles,vector<int>*total_per_file);
         int printRecord(FixedRecord r);
         int insertHeader(orderedHeader<char[MAX_ORDERED_FIELD_SIZE]> head);
 
@@ -72,16 +81,5 @@ class orderedManipulator : public FileManipulator
         int createTempFile();
         int openTempFileWriting();
         int closeTempFileWriting();
-
-        int comparator(string a, string b);
-        int comparator(int a, int b);
-        int comparator(double a, double b);
-
-        int binarySearcher(int value);
-        int binarySearcher(double value);
-        int binarySearcher(string value);
-
-        int blockParc; 
-
 };
 #endif
