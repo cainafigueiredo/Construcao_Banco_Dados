@@ -58,65 +58,137 @@ int orderedManipulator::binarySearcher(int value){
 
     i = 0;
     this->blockParc = 0;
-    while (i<10){
+
+    med = (inf+sup)/2;
+    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+    this->fileRead.read((char *) &recordLow, head.recordSize);
+    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+    this->fileRead.read((char *) &recordMed, head.recordSize);
+    this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
+    this->fileRead.read((char *) &recordHigh, head.recordSize);
+    while (i<5){
         i++;
 
-        med = (inf+sup)/2;
-        this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
-        this->fileRead.read((char *) &recordLow, head.recordSize);
-        this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
-        this->fileRead.read((char *) &recordMed, head.recordSize);
-        this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
-        this->fileRead.read((char *) &recordHigh, head.recordSize);
+        this->blockParc+=1;
 
-        this->blockParc+=3;
 
         switch (attr)
         {
             case 0: /*id*/
-                if (recordHigh.id == -1){sup = sup-1; break;}
-                if (recordLow.id == -1){inf = inf-1; break;}
+                if (recordHigh.id == -1){
+                    sup = sup-1;
+                    this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordHigh, head.recordSize);
+                    break;}
+                if (recordLow.id == -1){
+                    inf = inf+1;
+                    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordLow, head.recordSize);
+                    break;}
                 if (recordMed.id == -1){
                     if(!orderedManipulator::comparator(recordLow.id, value)){ return inf;}
                     inf=inf+1;
+                    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordLow, head.recordSize);
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
                     break;}
                 if(!orderedManipulator::comparator(recordHigh.id, value)){ return sup;}
                 if(!orderedManipulator::comparator(recordLow.id, value)){ return inf;}
                 if(!orderedManipulator::comparator(recordMed.id, value)){ return med;}
                 if ((med == sup)||(sup == inf )||(med == inf )){ return -1;}
                 pos = orderedManipulator::comparator(recordMed.id, value) ;
-                if(pos == 1){sup = med;}
-                else {inf = med;}
+                if(pos == 1){
+                    sup = med;
+                    recordHigh = recordMed;
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
+                    }
+                else {
+                    inf = med;
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
+                }
                 break;
             case 5: /*tipoesc*/
-                if (recordHigh.tipoesc == -1){sup = sup-1; break;}
-                if (recordLow.tipoesc == -1){inf = inf-1; break;}
+                if (recordHigh.tipoesc == -1){
+                    sup = sup-1;
+                    this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordHigh, head.recordSize);
+                    break;}
+                if (recordLow.tipoesc == -1){
+                    inf = inf+1;
+                    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordLow, head.recordSize);
+                    break;}
                 if (recordMed.tipoesc == -1){
                     if(!orderedManipulator::comparator(recordLow.tipoesc, value)){ return inf;}
                     inf=inf+1;
+                    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordLow, head.recordSize);
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
                     break;}
                 if(!orderedManipulator::comparator(recordHigh.tipoesc, value)){ return sup;}
                 if(!orderedManipulator::comparator(recordLow.tipoesc, value)){ return inf;}
                 if(!orderedManipulator::comparator(recordMed.tipoesc, value)){ return med;}
                 if ((med == sup)||(sup == inf )||(med == inf )){ return -1;}
                 pos = orderedManipulator::comparator(recordMed.tipoesc, value) ;
-                if(pos == 1){sup = med;}
-                else {inf = med;}
-                break;
-            case 9: /*n_alunos*/
-                if (recordHigh.id == -1){sup = sup-1; break;}
-                if (recordLow.id == -1){inf = inf-1; break;}
+                if(pos == 1){
+                    sup = med;
+                    recordHigh = recordMed;
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
+                    }
+                else {
+                    inf = med;
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
+                }
+                case 9: /*n_alunos*/
+                if (recordHigh.id == -1){
+                    sup = sup-1;
+                    this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordHigh, head.recordSize);
+                    break;}
+                if (recordLow.id == -1){
+                    inf = inf+1;
+                    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordLow, head.recordSize);
+                    break;}
                 if (recordMed.id == -1){
                     if(!orderedManipulator::comparator(recordLow.n_alunos, value)){ return inf;}
                     inf=inf+1;
+                    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordLow, head.recordSize);
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
                     break;}
                 if(!orderedManipulator::comparator(recordHigh.n_alunos, value)){ return sup;}
                 if(!orderedManipulator::comparator(recordLow.n_alunos, value)){ return inf;}
                 if(!orderedManipulator::comparator(recordMed.n_alunos, value)){ return med;}
                 if ((med == sup)||(sup == inf )||(med == inf )){ return -1;}
                 pos = orderedManipulator::comparator(recordMed.n_alunos, value) ;
-                if(pos == 1){sup = med;}
-                else {inf = med;}
+                if(pos == 1){
+                    sup = med;
+                    recordHigh = recordMed;
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
+                    }
+                else {
+                    inf = med;
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
+                }
                 break;
             default:    
                 return -1;
@@ -144,36 +216,60 @@ int orderedManipulator::binarySearcher(double value){
 
 
     i = 0;
+    med = (inf+sup)/2;
+    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+    this->fileRead.read((char *) &recordLow, head.recordSize);
+    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+    this->fileRead.read((char *) &recordMed, head.recordSize);
+    this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
+    this->fileRead.read((char *) &recordHigh, head.recordSize);
     this->blockParc = 0;
     while (i<999999999){
         i++;
 
-        med = (inf+sup)/2;
-        this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
-        this->fileRead.read((char *) &recordLow, head.recordSize);
-        this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
-        this->fileRead.read((char *) &recordMed, head.recordSize);
-        this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
-        this->fileRead.read((char *) &recordHigh, head.recordSize);
-        
-        this->blockParc +=3;
+            
+        this->blockParc +=1;
         switch (attr)
         {
             case 6: /*cod_esc*/
-                if (recordHigh.cod_esc == -1.0){sup = sup-1; break;}
-                if (recordLow.cod_esc == -1.0){inf = inf-1; break;}
-                if (recordMed.cod_esc == -1.0){
+                if (recordHigh.cod_esc == -1){
+                    sup = sup-1;
+                    this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordHigh, head.recordSize);
+                    break;}
+                if (recordLow.cod_esc == -1){
+                    inf = inf+1;
+                    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordLow, head.recordSize);
+                    break;}
+                if (recordMed.cod_esc == -1){
                     if(!orderedManipulator::comparator(recordLow.cod_esc, value)){ return inf;}
                     inf=inf+1;
+                    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordLow, head.recordSize);
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
                     break;}
                 if(!orderedManipulator::comparator(recordHigh.cod_esc, value)){ return sup;}
                 if(!orderedManipulator::comparator(recordLow.cod_esc, value)){ return inf;}
                 if(!orderedManipulator::comparator(recordMed.cod_esc, value)){ return med;}
                 if ((med == sup)||(sup == inf )||(med == inf )){ return -1;}
                 pos = orderedManipulator::comparator(recordMed.cod_esc, value) ;
-                if(pos == 1){sup = med;}
-                else {inf = med;}
-               break;
+                if(pos == 1){
+                    sup = med;
+                    recordHigh = recordMed;
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
+                    }
+                else {
+                    inf = med;
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
+                }
+                break;
             default:    
                 return -1;
         }
@@ -204,113 +300,259 @@ int orderedManipulator::binarySearcher(string value){
 
     i = 0;
 
+    med = (inf+sup)/2;
+
+    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+    this->fileRead.read((char *) &recordLow, head.recordSize);
+    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+    this->fileRead.read((char *) &recordMed, head.recordSize);
+    this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
+    this->fileRead.read((char *) &recordHigh, head.recordSize);
+
 
     this->blockParc = 0;
 
     while (i<99999999){
         i++;
-        med = (inf+sup)/2;
+        
 
-        this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
-        this->fileRead.read((char *) &recordLow, head.recordSize);
-        this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
-        this->fileRead.read((char *) &recordMed, head.recordSize);
-        this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
-        this->fileRead.read((char *) &recordHigh, head.recordSize);
-
-        this->blockParc += 3;
+        this->blockParc += 1;
 
         switch (attr)
        {
             case 1: /*nomedep*/
-                if (!orderedManipulator::comparator(recordHigh.nomedep, "DELETED")){sup = sup-1; break;}
-                if (!orderedManipulator::comparator(recordLow.nomedep, "DELETED")){inf = inf-1; break;}
-                if (!orderedManipulator::comparator(recordMed.nomedep, "DELETED")){
+                if (recordHigh.id == -1){
+                    sup = sup-1;
+                    this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordHigh, head.recordSize);
+                    break;}
+                if (recordLow.id == -1){
+                    inf = inf+1;
+                    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordLow, head.recordSize);
+                    break;}
+                if (recordMed.id == -1){
                     if(!orderedManipulator::comparator(recordLow.nomedep, value)){ return inf;}
                     inf=inf+1;
+                    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordLow, head.recordSize);
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
                     break;}
                 if(!orderedManipulator::comparator(recordHigh.nomedep, value)){ return sup;}
                 if(!orderedManipulator::comparator(recordLow.nomedep, value)){ return inf;}
                 if(!orderedManipulator::comparator(recordMed.nomedep, value)){ return med;}
                 if ((med == sup)||(sup == inf )||(med == inf )){ return -1;}
                 pos = orderedManipulator::comparator(recordMed.nomedep, value) ;
-                if(pos == 1){sup = med;}
-                else {inf = med;}
+                if(pos == 1){
+                    sup = med;
+                    recordHigh = recordMed;
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
+                    }
+                else {
+                    inf = med;
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
+                }
                 break;
             case 2: /*de*/
-                if (!orderedManipulator::comparator(recordHigh.de, "DELETED")){sup = sup-1; break;}
-                if (!orderedManipulator::comparator(recordLow.de, "DELETED")){inf = inf-1; break;}
-                if (!orderedManipulator::comparator(recordMed.de, "DELETED")){
+                if (recordHigh.id == -1){
+                    sup = sup-1;
+                    this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordHigh, head.recordSize);
+                    break;}
+                if (recordLow.id == -1){
+                    inf = inf+1;
+                    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordLow, head.recordSize);
+                    break;}
+                if (recordMed.id == -1){
                     if(!orderedManipulator::comparator(recordLow.de, value)){ return inf;}
                     inf=inf+1;
+                    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordLow, head.recordSize);
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
                     break;}
                 if(!orderedManipulator::comparator(recordHigh.de, value)){ return sup;}
                 if(!orderedManipulator::comparator(recordLow.de, value)){ return inf;}
                 if(!orderedManipulator::comparator(recordMed.de, value)){ return med;}
                 if ((med == sup)||(sup == inf )||(med == inf )){ return -1;}
                 pos = orderedManipulator::comparator(recordMed.de, value) ;
-                if(pos == 1){sup = med;}
-                else {inf = med;}
+                if(pos == 1){
+                    sup = med;
+                    recordHigh = recordMed;
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
+                    }
+                else {
+                    inf = med;
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
+                }
                 break;
             case 3: /*distr*/
-                if (!orderedManipulator::comparator(recordHigh.distr, "DELETED")){sup = sup-1; break;}
-                if (!orderedManipulator::comparator(recordLow.distr, "DELETED")){inf = inf-1; break;}
-               if (!orderedManipulator::comparator(recordMed.distr, "DELETED")){
+                if (recordHigh.id == -1){
+                    sup = sup-1;
+                    this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordHigh, head.recordSize);
+                    break;}
+                if (recordLow.id == -1){
+                    inf = inf+1;
+                    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordLow, head.recordSize);
+                    break;}
+                if (recordMed.id == -1){
                     if(!orderedManipulator::comparator(recordLow.distr, value)){ return inf;}
                     inf=inf+1;
+                    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordLow, head.recordSize);
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
                     break;}
                 if(!orderedManipulator::comparator(recordHigh.distr, value)){ return sup;}
                 if(!orderedManipulator::comparator(recordLow.distr, value)){ return inf;}
                 if(!orderedManipulator::comparator(recordMed.distr, value)){ return med;}
                 if ((med == sup)||(sup == inf )||(med == inf )){ return -1;}
                 pos = orderedManipulator::comparator(recordMed.distr, value) ;
-                if(pos == 1){sup = med;}
-                else {inf = med;}
+                if(pos == 1){
+                    sup = med;
+                    recordHigh = recordMed;
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
+                    }
+                else {
+                    inf = med;
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
+                }
                 break;
             case 4: /*mun*/
-                if (!orderedManipulator::comparator(recordHigh.mun, "DELETED")){sup = sup-1; break;}
-                if (!orderedManipulator::comparator(recordLow.mun, "DELETED")){inf = inf-1; break;}
-                if (!orderedManipulator::comparator(recordMed.mun, "DELETED")){
+                if (recordHigh.id == -1){
+                    sup = sup-1;
+                    this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordHigh, head.recordSize);
+                    break;}
+                if (recordLow.id == -1){
+                    inf = inf+1;
+                    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordLow, head.recordSize);
+                    break;}
+                if (recordMed.id == -1){
                     if(!orderedManipulator::comparator(recordLow.mun, value)){ return inf;}
                     inf=inf+1;
+                    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordLow, head.recordSize);
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
                     break;}
                 if(!orderedManipulator::comparator(recordHigh.mun, value)){ return sup;}
                 if(!orderedManipulator::comparator(recordLow.mun, value)){ return inf;}
                 if(!orderedManipulator::comparator(recordMed.mun, value)){ return med;}
                 if ((med == sup)||(sup == inf )||(med == inf )){ return -1;}
                 pos = orderedManipulator::comparator(recordMed.mun, value) ;
-                if(pos == 1){sup = med;}
-                else {inf = med;}
+                if(pos == 1){
+                    sup = med;
+                    recordHigh = recordMed;
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
+                    }
+                else {
+                    inf = med;
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
+                }
                 break;
-            case 7: /*nomesc*/
-                if (!orderedManipulator::comparator(recordHigh.nomesc, "DELETED")){sup = sup-1; break;}
-                if (!orderedManipulator::comparator(recordLow.nomesc, "DELETED")){inf = inf-1; break;}
-                if (!orderedManipulator::comparator(recordMed.nomesc, "DELETED")){ 
+            case 7:
+                if (recordHigh.id == -1){
+                    sup = sup-1;
+                    this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordHigh, head.recordSize);
+                    break;}
+                if (recordLow.id == -1){
+                    inf = inf+1;
+                    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordLow, head.recordSize);
+                    break;}
+                if (recordMed.id == -1){
                     if(!orderedManipulator::comparator(recordLow.nomesc, value)){ return inf;}
                     inf=inf+1;
+                    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordLow, head.recordSize);
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
                     break;}
                 if(!orderedManipulator::comparator(recordHigh.nomesc, value)){ return sup;}
                 if(!orderedManipulator::comparator(recordLow.nomesc, value)){ return inf;}
                 if(!orderedManipulator::comparator(recordMed.nomesc, value)){ return med;}
                 if ((med == sup)||(sup == inf )||(med == inf )){ return -1;}
                 pos = orderedManipulator::comparator(recordMed.nomesc, value) ;
-                if(pos == 1){sup = med;}
-                else {inf = med;}
+                if(pos == 1){
+                    sup = med;
+                    recordHigh = recordMed;
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
+                    }
+                else {
+                    inf = med;
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
+                }
                 break;
             case 8: /*ds_pais*/
-                if (!orderedManipulator::comparator(recordHigh.ds_pais, "DELETED")){sup = sup-1; break;}
-                if (!orderedManipulator::comparator(recordLow.ds_pais, "DELETED")){inf = inf-1; break;}
-                if (!orderedManipulator::comparator(recordMed.ds_pais, "DELETED")){
+                if (recordHigh.id == -1){
+                    sup = sup-1;
+                    this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordHigh, head.recordSize);
+                    break;}
+                if (recordLow.id == -1){
+                    inf = inf+1;
+                    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordLow, head.recordSize);
+                    break;}
+                if (recordMed.id == -1){
                     if(!orderedManipulator::comparator(recordLow.ds_pais, value)){ return inf;}
                     inf=inf+1;
+                    this->fileRead.seekg(head.headerSize + inf * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordLow, head.recordSize);
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
                     break;}
                 if(!orderedManipulator::comparator(recordHigh.ds_pais, value)){ return sup;}
                 if(!orderedManipulator::comparator(recordLow.ds_pais, value)){ return inf;}
                 if(!orderedManipulator::comparator(recordMed.ds_pais, value)){ return med;}
                 if ((med == sup)||(sup == inf )||(med == inf )){ return -1;}
                 pos = orderedManipulator::comparator(recordMed.ds_pais, value) ;
-                if(pos == 1){sup = med;}
-                else {inf = med;}
+                if(pos == 1){
+                    sup = med;
+                    recordHigh = recordMed;
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
+                    }
+                else {
+                    inf = med;
+                    med = (sup+inf)/2;
+                    this->fileRead.seekg(head.headerSize + med * head.recordSize,ios::beg);
+                    this->fileRead.read((char *) &recordMed, head.recordSize);
+                }
                 break;
             default:    
                 return -1;
@@ -920,7 +1162,7 @@ int orderedManipulator::findWhereBetween (string attribute, int value1, int valu
         this->closeForReading();
         int index1 = -1;
         int index2 = -1;
-        int j = value1;
+        int j = value1-1;
         while (index1 == -1){
             j++;
             index1 = orderedManipulator::binarySearcher(j);
@@ -928,7 +1170,7 @@ int orderedManipulator::findWhereBetween (string attribute, int value1, int valu
             this->closeForReading();
             if (j > value2){return -1;} 
         } 
-        j = value2;
+        j = value2+1;
         while (index2 == -1){
             j--;
             index2 = orderedManipulator::binarySearcher(j);
@@ -937,7 +1179,6 @@ int orderedManipulator::findWhereBetween (string attribute, int value1, int valu
             if (j < value1){return -1;} 
         } 
         this->openForReading();
-
         this->fileRead.seekg(head.headerSize + index1 * head.recordSize,ios::beg);
         this->fileRead.read((char *) &record, head.recordSize);
         records.push_back(record);
@@ -1035,7 +1276,6 @@ int orderedManipulator::findWhereBetween (string attribute, int value1, int valu
         i = index1;
         while (i<index2-1){
             found = true; 
-            cout << i << endl;
             i++;
             this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
             this->fileRead.read((char *) &record, head.recordSize);
@@ -1465,7 +1705,7 @@ int orderedManipulator::removeBetween(string attribute, int value1, int value2)
     else{
         this->fileRead.seekg(sizeof(head), ios::beg);
         for (i = 0; i < head.recordsAmount; i++)
-        {   cout << i << endl;
+        {   
             this->fileRead.read((char *) &record, sizeof(FixedRecord));
             switch (attr)
             {
