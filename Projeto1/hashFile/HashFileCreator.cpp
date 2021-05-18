@@ -118,10 +118,10 @@ int HashFileCreator::insertRecords()
             // Caso já existam registros na lista de registros de overflow, então apenas faça
             // com que o último registro saiba que um novo registro está entrando na lista.
             else {
-                closeNewFileWriting();
+                this->closeNewFileWriting();
 
                 // Atualizando o ponteiro do último registro da lista encadeada
-                openNewFileReading();
+                this->openNewFileReading();
                 
                 last_overflow_block_addr = this->header.buckets[bucket_id].overflow.last_block_addr;
                 last_overflow_block_offset = this->header.buckets[bucket_id].overflow.last_block_offset;
@@ -134,11 +134,11 @@ int HashFileCreator::insertRecords()
                 tempRecord.nextRecord_block_addr = overflow_block_addr;
                 tempRecord.nextRecord_block_offset = overflow_block_offset;
 
-                closeNewFileReading();
+                this->closeNewFileReading();
 
                 // cout << "Next record: " << tempRecord.nextRecord_block_addr << " , " << tempRecord.nextRecord_block_offset << "\n";
 
-                openNewFileWriting();
+                this->openNewFileWriting();
 
                 this->outNewFile.seekp(sizeof(this->header) + last_overflow_addr, ios::beg);
                 this->outNewFile.write((char *) &tempRecord, sizeof(tempRecord));

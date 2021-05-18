@@ -734,21 +734,23 @@ int HashManipulator::removeOne(int id)
     {
         cout << "Record " << id << " does not exist." << endl;
         return -1;
-    } else {
-        // Se foi encontrado, então também foi removido. Vamos atualizar o registro e as variáveis com 
-        // os números de registros
-        recordAddr = (foundRecordBlock * head.blockSize + foundRecordOffset * sizeof(HashFixedRecord));
-        this->openForWriting();
-        this->fileWrite.seekp(sizeof(head) + recordAddr);
-        this->fileWrite.write((char *) &record, sizeof(HashFixedRecord));
-        this->closeForWriting();
-
-        head.numberOfDeletedRecords++;
-        // head.decrementNumberOfOverflowRecords();
-        // head.decrementRecordsAmount();
-        // head.buckets[bucket_id].decrementNumberOfRecords();
-        cout << "Record " << id << " was removed." << endl;
     }
+
+    // Se foi encontrado, então também foi removido. Vamos atualizar o registro e as variáveis com 
+    // os números de registros
+    recordAddr = (foundRecordBlock * head.blockSize + foundRecordOffset * sizeof(HashFixedRecord));
+    this->openForWriting();
+    this->fileWrite.seekp(sizeof(head) + recordAddr);
+    this->fileWrite.write((char *) &record, sizeof(HashFixedRecord));
+    this->closeForWriting();
+
+    head.numberOfDeletedRecords++;
+    head.buckets[bucket_id].numDeleted++;
+    // head.decrementNumberOfOverflowRecords();
+    // head.decrementRecordsAmount();
+    // head.buckets[bucket_id].decrementNumberOfRecords();
+    cout << "Record " << id << " was removed." << endl;
+
 
     //this->printSchema();
     //this->printRecord(record);
@@ -990,4 +992,100 @@ int HashManipulator::removeBetween(string attribute, double value1, double value
 
     this->closeForReading();
     return 0;
+}
+
+int HashManipulator:: insertOne (string strRecord)
+{
+    HashHeader header;
+    HashFixedRecord newRecord, tempRecord;
+    int bucket_id, block_addr, n_recordsInBlock;
+    int overflow_block_addr, overflow_block_offset;
+    int recordAddr;
+    int last_overflow_block_addr, last_overflow_block_offset, last_overflow_addr;
+    newRecord.readCSVLine(strRecord);
+
+    bucket_id = header.hashFunction(newRecord.id);
+
+    // Encontrando o bloco onde o registro deveria ser inserido e obtendo o número de 
+    // registros nesse bloco
+    block_addr = header.buckets[bucket_id].block_addr;
+    n_recordsInBlock = header.buckets[bucket_id].numberOfRecords;
+
+    // Investigando se com a inserção haverá overflow de registros dentro do bloco. 
+    // Em caso afirmativo, a inserção é feita na lista de registros de overflow. 
+    // Caso contrário, a inserção é feita na próxima posição livre do bloco.
+    if ((n_recordsInBlock+1)*header.recordSize >= header.blockSize) {
+        // Se chegou aqui, é porque o registro precisa ser inserido na lista de overflow.
+        // Na verdade, o registro é inserido na primeira posição livre dentre os blocos que
+        // não são mapeados pelos buckets.
+        overflow_block_addr = (NUMBER_OF_BUCKETS) + (header.numberOfOverflowRecords / header.getBlockingFactor());
+        overflow_block_offset = header.numberOfOverflowRecords % header.getBlockingFactor();
+        
+        recordAddr = (overflow_block_addr * header.blockSize) + (overflow_block_offset * sizeof(newRecord));
+
+        // Se for o primeiro registro de overflow, então faz com que o bucket saiba 
+        // que ele é o primeiro da lista de registros de overflow.
+        if (header.buckets[bucket_id].overflow.first_block_addr == -1) {
+            header.buckets[bucket_id].overflow.first_block_addr = overflow_block_addr;
+            header.buckets[bucket_id].overflow.first_block_offset = overflow_block_offset;    
+            header.buckets[bucket_id].overflow.last_block_addr = overflow_block_addr;
+            header.buckets[bucket_id].overflow.last_block_offset = overflow_block_offset;
+        } 
+        // Caso já existam registros na lista de registros de overflow, então apenas faça
+        // com que o último registro saiba que um novo registro está entrando na lista.
+        else {
+            this->closeForWriting();
+
+            // Atualizando o ponteiro do último registro da lista encadeada
+            this->openForReading();
+            
+            last_overflow_block_addr = header.buckets[bucket_id].overflow.last_block_addr;
+            last_overflow_block_offset = header.buckets[bucket_id].overflow.last_block_offset;
+            last_overflow_addr = (last_overflow_block_addr * header.blockSize) + (last_overflow_block_offset * sizeof(newRecord));
+            
+            this->fileRead.seekg(sizeof(header) + last_overflow_addr, ios::beg);
+
+            this->fileRead.read((char *) &tempRecord, sizeof(tempRecord));
+
+            tempRecord.nextRecord_block_addr = overflow_block_addr;
+            tempRecord.nextRecord_block_offset = overflow_block_offset;
+
+            this->closeForReading();
+
+            // cout << "Next record: " << tempRecord.nextRecord_block_addr << " , " << tempRecord.nextRecord_block_offset << "\n";
+
+            this->openForWriting();
+
+            this->fileWrite.seekp(sizeof(header) + last_overflow_addr, ios::beg);
+            this->fileWrite.write((char *) &tempRecord, sizeof(tempRecord));
+            
+            // Fazendo o bucket apontar para este registro como sendo o último da lista 
+            // encadeada.
+            header.buckets[bucket_id].overflow.last_block_addr = overflow_block_addr;
+            header.buckets[bucket_id].overflow.last_block_offset = overflow_block_offset;
+        }
+
+        // Incrementando o número de registros de overflow.
+        header.incrementNumberOfOverflowRecords();
+
+    } 
+    
+    else {
+        // Obtendo o ponteiro para a próxima posição livre do bloco do bucket.
+        recordAddr = (block_addr * header.blockSize) + (n_recordsInBlock * sizeof(newRecord));
+    }
+
+    // Escrevendo o novo registro no arquivo de registros.
+    this->fileWrite.seekp(sizeof(header) + recordAddr, ios::beg);
+    
+    this->fileWrite.write((char *) &newRecord, sizeof(newRecord));
+    // Incrementando o total de registros no arquivo e o total de registros no bucket.
+    header.incrementRecordsAmount();
+    header.buckets[bucket_id].incrementNumberOfRecords();    
+
+}
+
+int HashManipulator::reorganize ()
+{
+
 }

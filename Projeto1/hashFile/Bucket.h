@@ -11,6 +11,7 @@ class Bucket {
 		int block_addr;
 		OverflowBucket overflow;
 		int numberOfRecords;
+		int numDeleted;
 		Bucket();
 		void setBlockAddr(int block_addr);
 		void setNumberOfRecords(int numberOfRecords);

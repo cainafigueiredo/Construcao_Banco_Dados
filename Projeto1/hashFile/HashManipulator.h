@@ -27,5 +27,10 @@ class HashManipulator : public FileManipulator
         int removeOne(int id);
         int removeBetween(string attribute, int value1, int value2);
         int removeBetween(string attribute, double value1, double value2);
+
+        int insertOne(string record);
+        int insertMultiple(vector<string> inserts);
+
+        int reorganize ();
 };
 #endif
