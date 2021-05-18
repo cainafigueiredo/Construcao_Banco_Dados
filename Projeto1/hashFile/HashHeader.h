@@ -1,5 +1,5 @@
-#ifndef HASH_HEADER_
-#define HASH_HEADER_
+#ifndef __HASH_HEADER__
+#define __HASH_HEADER__
 #include "./HashFixedRecord.h"
 #include "../FileHeader.h"
 #include "./Bucket.h"

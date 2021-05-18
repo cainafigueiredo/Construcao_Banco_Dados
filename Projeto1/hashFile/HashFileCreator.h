@@ -1,5 +1,5 @@
-#ifndef _FIXED_HEAP_FILE_CREATOR_
-#define _FIXED_HEAP_FILE_CREATOR_
+#ifndef _HASH_FILE_CREATOR_
+#define _HASH_FILE_CREATOR_
 
 #include <fstream>
 #include <iostream>

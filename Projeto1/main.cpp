@@ -1,5 +1,7 @@
 #include <iostream>
+#include "FileCreator.h"
 #include "./hashFile/HashFileCreator.h"
+#include "./fixedHeap/FixedHeapFileCreator.h"
 #include "FileManager.h"
 
 using namespace std;
@@ -13,13 +15,15 @@ using namespace std;
 #define FIND_WHERE_BETWEEN_INSTRUCTION "findWhereBetween"
 #define REMOVE_ONE_BY_ID_INSTRUCTION "removeOneById"
 #define REMOVE_WHERE_BETWEEN_INSTRUCTION "removeWhereBetween"
+#define REORGANIZE_INSTRUCTION "reorganize"
 
+#define FIXED_HEAP_ORGANIZATION "fixedHeap"
 #define HASH_ORGANIZATION "externalHash"
 
 #define NEW_BASE_HELP "newBase:\nOrganização do arquivo | Caminho para o CSV | Caminho e nome do arquivo de destino\n"
 
 int main(int argc, char *argv[]) {
-	HashFileCreator * hash; 
+	FileCreator * recordsFile; 
 	string command;
 	FileManager * manager = new FileManager();
 	for (int i = 1; i < argc; i++) {
@@ -42,8 +46,12 @@ int main(int argc, char *argv[]) {
 			string source = argv[i+2];
 			string destiny = argv[i+3];
 			if (organization == HASH_ORGANIZATION) {
-				hash = new HashFileCreator(source, destiny);
-				hash->insertRecords();
+				recordsFile = new HashFileCreator(source, destiny);
+				recordsFile->insertRecords();
+			} 
+			else if (organization == FIXED_HEAP_ORGANIZATION) {
+				recordsFile = new FixedHeapFileCreator(source, destiny);
+				recordsFile->insertRecords();
 			}
 			i = i+3;
 		}
@@ -149,6 +157,10 @@ int main(int argc, char *argv[]) {
 			}
 			
 			i = i+4;
+		} 
+
+		else if (command == REORGANIZE_INSTRUCTION) {
+			cout << manager->fm->reorganize();
 		}
 
 		cout << "\n> Instruction finished: " << command << "\n";
