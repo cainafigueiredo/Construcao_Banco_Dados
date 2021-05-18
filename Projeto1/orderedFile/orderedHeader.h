@@ -37,6 +37,7 @@ orderedHeader<T>::orderedHeader(char* extension_filename, char* order_by)
     // this->limitValue = T();
     this->recordsAmount = 0;
     this->fileOrganization = Ordered;
+    this->freeList = -1; 
 };
 
 
@@ -48,6 +49,7 @@ orderedHeader<T>::orderedHeader()
     // this->limitValue = T();
     this->recordsAmount = 0;
     this->fileOrganization = Ordered;
+    this->freeList = -1;
 };
 
 #endif

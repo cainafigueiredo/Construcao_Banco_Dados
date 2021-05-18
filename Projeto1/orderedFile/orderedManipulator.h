@@ -72,5 +72,16 @@ class orderedManipulator : public FileManipulator
         int createTempFile();
         int openTempFileWriting();
         int closeTempFileWriting();
+
+        int comparator(string a, string b);
+        int comparator(int a, int b);
+        int comparator(double a, double b);
+
+        int binarySearcher(int value);
+        int binarySearcher(double value);
+        int binarySearcher(string value);
+
+        int blockParc; 
+
 };
 #endif
