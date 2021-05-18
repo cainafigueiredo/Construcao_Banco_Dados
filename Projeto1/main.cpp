@@ -16,6 +16,7 @@ using namespace std;
 #define REMOVE_ONE_BY_ID_INSTRUCTION "removeOneById"
 #define REMOVE_WHERE_BETWEEN_INSTRUCTION "removeWhereBetween"
 #define REORGANIZE_INSTRUCTION "reorganize"
+#define HEADER_INFO_INSTRUCTION "headerInfo"
 
 #define FIXED_HEAP_ORGANIZATION "fixedHeap"
 #define HASH_ORGANIZATION "externalHash"
@@ -23,7 +24,7 @@ using namespace std;
 #define NEW_BASE_HELP "newBase:\nOrganização do arquivo | Caminho para o CSV | Caminho e nome do arquivo de destino\n"
 
 int main(int argc, char *argv[]) {
-	FileCreator * recordsFile; 
+	FileCreator * recordsFile = NULL; 
 	string command;
 	FileManager * manager = new FileManager();
 	for (int i = 1; i < argc; i++) {
@@ -80,7 +81,7 @@ int main(int argc, char *argv[]) {
 
 		else if (command == FIND_ONE_BY_ID_INSTRUCTION) {
 			int id = atoi(argv[i+1]);
-			cout << manager->fm->findOne(id) << endl;
+			manager->fm->findOne(id);
 			i = i+1;
 		}
 
@@ -161,6 +162,14 @@ int main(int argc, char *argv[]) {
 
 		else if (command == REORGANIZE_INSTRUCTION) {
 			cout << manager->fm->reorganize();
+		}
+
+		else if (command == HEADER_INFO_INSTRUCTION) {
+			string organization = argv[i+1];
+			if (organization == HASH_ORGANIZATION) {
+				manager->recordsFileInfo();
+			}
+			i = i+1;
 		}
 
 		cout << "\n> Instruction finished: " << command << "\n";

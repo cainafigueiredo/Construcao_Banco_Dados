@@ -4,6 +4,15 @@ HashManipulator::HashManipulator(string fileName) : FileManipulator(fileName) {
     
 }
 
+int HashManipulator::getHeaderInfo() {
+    HashHeader head;
+    this->openForReading();
+    this->fileRead.read((char *) &head, sizeof(head));
+    this->closeForReading();
+    head.info();
+    return 0;
+}
+
 int HashManipulator::printRecord(HashFixedRecord r)
 {
     cout << r.id << "\t" << r.nomedep << "\t" << r.de << "\t" <<
@@ -105,7 +114,7 @@ int HashManipulator::findWhereEqual(string attribute, int value)
     HashFixedRecord record;
     HashHeader head;
     vector<HashFixedRecord> records;
-    int attr, blocksAccessed,  i;
+    int attr, blocksAccessed;
     bool found = false;
     map<string, int> m = this->createMap();
     attr = m[attribute];
@@ -224,7 +233,7 @@ int HashManipulator::findWhereEqual(string attribute, double value)
     HashFixedRecord record;
     HashHeader head;
     vector<HashFixedRecord> records;
-    int attr, blocksAccessed,  i;
+    int attr, blocksAccessed;
     bool found = false;
     map<string, int> m = this->createMap();
     attr = m[attribute];
@@ -314,7 +323,7 @@ int HashManipulator::findWhereEqual(string attribute, string value)
     HashFixedRecord record;
     HashHeader head;
     vector<HashFixedRecord> records;
-    int attr, blocksAccessed, i;
+    int attr, blocksAccessed;
     bool found = false;
     map<string, int> m = this->createMap();
     attr = m[attribute];
@@ -409,7 +418,7 @@ int HashManipulator::findWhereBetween(string attribute, int value1, int value2)
     HashFixedRecord record;
     HashHeader head;
     vector<HashFixedRecord> records;
-    int attr, blocksAccessed,  i;
+    int attr, blocksAccessed;
     bool found = false;
     map<string, int> m = this->createMap();
     attr = m[attribute];
@@ -527,7 +536,7 @@ int HashManipulator::findWhereBetween(string attribute, double value1, double va
     HashFixedRecord record;
     HashHeader head;
     vector<HashFixedRecord> records;
-    int attr, blocksAccessed,  i;
+    int attr, blocksAccessed;
     bool found = false;
     map<string, int> m = this->createMap();
     attr = m[attribute];
@@ -765,7 +774,7 @@ int HashManipulator::removeBetween(string attribute, int value1, int value2)
 {
     HashFixedRecord record;
     HashHeader head;
-    int attr, blocksAccessed,  i;
+    int attr, blocksAccessed;
     bool found = false;
     map<string, int> m = this->createMap();
     attr = m[attribute];
@@ -896,7 +905,7 @@ int HashManipulator::removeBetween(string attribute, double value1, double value
 {
     HashFixedRecord record;
     HashHeader head;
-    int attr, blocksAccessed,  i;
+    int attr, blocksAccessed;
     bool found = false;
     map<string, int> m = this->createMap();
     attr = m[attribute];
@@ -994,7 +1003,7 @@ int HashManipulator::removeBetween(string attribute, double value1, double value
     return 0;
 }
 
-int HashManipulator:: insertOne (string strRecord)
+int HashManipulator:: insertOne (string strRecord, bool hasId)
 {
     HashHeader header;
     HashFixedRecord newRecord, tempRecord;
@@ -1002,16 +1011,15 @@ int HashManipulator:: insertOne (string strRecord)
     int overflow_block_addr, overflow_block_offset;
     int recordAddr;
     int last_overflow_block_addr, last_overflow_block_offset, last_overflow_addr;
-    newRecord.readCSVLine(strRecord);
+
+    header.lastID++;
+    newRecord.readCSVLine(strRecord, hasId);
 
     this->openForReading();
     this->fileRead.read((char *) &header, sizeof(HashHeader));
     this->closeForReading();
 
     this->openForWriting();
-
-    header.lastID++;
-    newRecord.id = header.lastID;
 
     bucket_id = header.hashFunction(newRecord.id);
 
@@ -1102,9 +1110,80 @@ int HashManipulator::insertMultiple(vector<string> inserts) {
     for (auto const &record: inserts) {
         this->insertOne(record);
     }
+    return 0;
 }
 
 int HashManipulator::reorganize ()
 {
+    system("echo '' > tmp.csv");
+    HashFileCreator * hashCreator = new HashFileCreator("tmp.csv", "tmp.dat");
+    FileManager * tmp_manager = new FileManager();
+    tmp_manager->loadFile("tmp.dat");
 
+    HashFixedRecord record;
+    HashHeader head;
+    char line[200];
+    int blocksAccessed;
+    
+    this->openForReading();
+    this->fileRead.read((char *) &head, sizeof(head));
+
+    int bucket_id, block_addr, n_recordsInBlock, n_recordsInBucket, n_overflowRecords, recordAddr;
+    int overflow_record_block_addr, overflow_record_block_offset;
+
+    blocksAccessed = 0;
+
+    // Procurando pelos registros nos blocos mapeados pelos buckets.
+    for (bucket_id = 0; bucket_id < NUMBER_OF_BUCKETS; bucket_id++)
+    {        
+        block_addr = head.buckets[bucket_id].block_addr;
+        n_recordsInBucket = head.buckets[bucket_id].numberOfRecords;
+        n_overflowRecords = (n_recordsInBucket <= head.getBlockingFactor()) ? 0 : n_recordsInBucket % head.getBlockingFactor();
+        n_recordsInBlock = n_recordsInBucket - n_overflowRecords; 
+        
+        recordAddr = (block_addr * head.blockSize);
+        this->fileRead.seekg(sizeof(head) + recordAddr);
+
+        for (int i = 0; i < n_recordsInBlock; i++) {
+            this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
+            blocksAccessed++;
+
+            // Salva o registro em um arquivo Hash temporário se esse registro não tiver sido deltado
+            if (!record.deleted) {
+                record.getRecordFieldsAsCSV(line, sizeof(line), true);
+                tmp_manager->fm->insertOne(line, true);
+            }
+
+        }
+    }
+
+    // Procurando pelos registros nos blocos de overflow.
+    for (int OFRecord = 0; OFRecord < head.numberOfOverflowRecords; OFRecord++)
+    {        
+        overflow_record_block_addr = (NUMBER_OF_BUCKETS) + (head.numberOfOverflowRecords / head.getBlockingFactor());
+        overflow_record_block_offset = head.numberOfOverflowRecords % head.getBlockingFactor();
+        
+        recordAddr = (overflow_record_block_addr * head.blockSize) + (overflow_record_block_offset * sizeof(record));
+        this->fileRead.seekg(sizeof(head) + recordAddr);
+
+        this->fileRead.read((char *) &record, sizeof(HashFixedRecord));
+        blocksAccessed++;
+
+        if (!record.deleted) {
+            record.getRecordFieldsAsCSV(line, sizeof(line), true);
+            tmp_manager->fm->insertOne(line, true);
+        }
+    }
+
+    cout << "Blocks Acessed: " << blocksAccessed << endl;
+
+    this->closeForReading();
+
+    // Fazendo o arquivo temporário se tornar o arquivo principal
+    stringstream command;
+
+    command << "mv ./tmp.dat " << this->fileName << endl;
+    system(command.str().c_str());
+
+    return 0;    
 }

@@ -25,6 +25,8 @@ class FileManager
         int getFileOrganization();
         int close();
 
-        void info();
+
+        void recordsFileInfo();
+
 };
 #endif

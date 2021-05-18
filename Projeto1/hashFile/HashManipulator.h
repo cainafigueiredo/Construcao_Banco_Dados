@@ -6,6 +6,8 @@
 #include "../FileManipulator.h"
 #include "HashHeader.h"
 #include "./HashFixedRecord.h"
+#include "./HashFileCreator.h"
+#include "../FileManager.h"
 
 using namespace std;
 
@@ -14,6 +16,7 @@ class HashManipulator : public FileManipulator
     public:
         HashManipulator(string fileName);
         
+        int getHeaderInfo();
         int printRecord(HashFixedRecord r);
         int insertHeader(HashHeader head);
 
@@ -28,7 +31,7 @@ class HashManipulator : public FileManipulator
         int removeBetween(string attribute, int value1, int value2);
         int removeBetween(string attribute, double value1, double value2);
 
-        int insertOne(string record);
+        int insertOne(string record, bool hasId = false);
         int insertMultiple(vector<string> inserts);
 
         int reorganize ();

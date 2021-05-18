@@ -21,6 +21,7 @@ class HashHeader: public FileHeader
 		void decrementNumberOfOverflowRecords();
         int getBlockingFactor();
         int getNumberOfNotDeletedRecords();
+        void info();
 };
 
 #endif

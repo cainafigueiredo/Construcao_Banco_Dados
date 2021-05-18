@@ -34,3 +34,16 @@ int HashHeader::getBlockingFactor() {
 int HashHeader::getNumberOfNotDeletedRecords() {
     return (this->recordsAmount - this->numberOfDeletedRecords);
 }
+
+void HashHeader::info() {
+    cout << "Number of Buckets: " << NUMBER_OF_BUCKETS << endl;
+    cout << "Blocking Factor: " << this->getBlockingFactor() << endl;
+    cout << "Block Size: " << this->blockSize << endl;
+    cout << "Record Size: " << this->recordSize << endl;
+    cout << "Number of Not Deleted Records: " << this-> getNumberOfNotDeletedRecords() << endl;
+    cout << "Number of Records: " << this->recordsAmount << endl;
+    cout << "Number of Overflow Records: " << this->numberOfOverflowRecords << endl;
+    for (int i = 0; i < NUMBER_OF_BUCKETS; i++) {
+        cout << "Bucket " << i << " - Block Addr: " << this->buckets[i].block_addr << endl;
+    }
+}

@@ -31,6 +31,7 @@ int FileManager::loadFile(string filePath) {
 			this->fm = new HashManipulator(this->fileName);
 			break;
 	}
+	this->close();
 
 	return 0;
 }
@@ -66,6 +67,8 @@ int FileManager::close() {
 	return 0;
 }
 
-void FileManager::info() {
-	cout << this->fileName << "\t" << this->fileOrganization << "\n";
+void FileManager::recordsFileInfo() {
+	cout << "File Path: " << this->fileName << endl;
+	cout << "File Organization: " << this->fileOrganization << endl;
+	this->fm->getHeaderInfo();
 }
