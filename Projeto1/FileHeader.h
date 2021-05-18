@@ -14,6 +14,7 @@ class FileHeader
         int fileOrganization;
         int recordsAmount;
         int blockSize;
+        int lastID;
 
 		void incrementRecordsAmount();
 		void decrementRecordsAmount();

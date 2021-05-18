@@ -6,5 +6,4 @@ FixedHeapHeader::FixedHeapHeader()
     this->fileOrganization = 0; // 0 means FixedHeap; ...
     this->recordSize = sizeof(FixedRecord);
     this->freeList = -1;
-    this->lastID = -1;
 }

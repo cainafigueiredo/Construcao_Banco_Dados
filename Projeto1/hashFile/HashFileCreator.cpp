@@ -171,10 +171,11 @@ int HashFileCreator::insertRecords()
     // cout << endl;
     this->closeRawFile();
     this->closeNewFileWriting();
+    numbers--;
+    this->header.lastID = numbers;
     this->insertHeader();
  
     return 0;
-
 }
 
 /*CODE FOR THE MANAGER*/

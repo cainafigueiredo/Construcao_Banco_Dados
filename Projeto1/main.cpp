@@ -6,6 +6,8 @@ using namespace std;
 
 #define NEW_BASE_INSTRUCTION "newBase"
 #define LOAD_BASE_INSTRUCTION "loadBase"
+#define INSERT_ONE_INSTRUCTION "insertOne"
+#define INSERT_MULTIPLE_INSTRUCTION "insertMultiple"
 #define FIND_ONE_BY_ID_INSTRUCTION "findOneById"
 #define FIND_WHERE_EQUAL_INSTRUCTION "findWhereEqual"
 #define FIND_WHERE_BETWEEN_INSTRUCTION "findWhereBetween"
@@ -51,6 +53,21 @@ int main(int argc, char *argv[]) {
 			string source = argv[i+1];
 			manager->loadFile(source);
 			i = i+1;
+		}
+
+		else if (command == INSERT_ONE_INSTRUCTION) {
+			string recordData = argv[i+1];
+			//cout << recordData << endl;
+			cout << manager->fm->insertOne(recordData) << endl;
+			i = i+1;
+		}
+
+		else if (command == INSERT_MULTIPLE_INSTRUCTION) {
+			string recordData1 = argv[i+1];
+			string recordData2 = argv[i+2];
+			vector<string> records {recordData1, recordData2};
+			cout << manager->fm->insertMultiple(records) << endl;
+			i = i+2;
 		}
 
 		else if (command == FIND_ONE_BY_ID_INSTRUCTION) {
@@ -138,3 +155,4 @@ int main(int argc, char *argv[]) {
 		cout << "-------------------------------------------------------\n\n";
 
 	}
+}

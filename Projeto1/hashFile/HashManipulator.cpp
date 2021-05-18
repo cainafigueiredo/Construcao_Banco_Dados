@@ -1004,6 +1004,15 @@ int HashManipulator:: insertOne (string strRecord)
     int last_overflow_block_addr, last_overflow_block_offset, last_overflow_addr;
     newRecord.readCSVLine(strRecord);
 
+    this->openForReading();
+    this->fileRead.read((char *) &header, sizeof(HashHeader));
+    this->closeForReading();
+
+    this->openForWriting();
+
+    header.lastID++;
+    newRecord.id = header.lastID;
+
     bucket_id = header.hashFunction(newRecord.id);
 
     // Encontrando o bloco onde o registro deveria ser inserido e obtendo o número de 
@@ -1081,8 +1090,18 @@ int HashManipulator:: insertOne (string strRecord)
     this->fileWrite.write((char *) &newRecord, sizeof(newRecord));
     // Incrementando o total de registros no arquivo e o total de registros no bucket.
     header.incrementRecordsAmount();
-    header.buckets[bucket_id].incrementNumberOfRecords();    
+    header.buckets[bucket_id].incrementNumberOfRecords();
+    this->fileWrite.seekp(0, ios::beg);    
+    this->fileWrite.write((char *) &header, sizeof(HashHeader));
+    this->closeForWriting();
 
+    return 0;
+}
+
+int HashManipulator::insertMultiple(vector<string> inserts) {
+    for (auto const &record: inserts) {
+        this->insertOne(record);
+    }
 }
 
 int HashManipulator::reorganize ()
