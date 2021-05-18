@@ -100,9 +100,9 @@ int orderedManipulator::binarySearcher(int value){
                 else {inf = med;}
                 break;
             case 9: /*n_alunos*/
-                if (recordHigh.n_alunos == -1){sup = sup-1; break;}
-                if (recordLow.n_alunos == -1){inf = inf-1; break;}
-                if (recordMed.n_alunos == -1){
+                if (recordHigh.id == -1){sup = sup-1; break;}
+                if (recordLow.id == -1){inf = inf-1; break;}
+                if (recordMed.id == -1){
                     if(!orderedManipulator::comparator(recordLow.n_alunos, value)){ return inf;}
                     inf=inf+1;
                     break;}
@@ -420,7 +420,7 @@ int orderedManipulator::findWhereEqual(string attribute, int value)
                     {
                         records.push_back(record);
                     }
-                    else if (record.n_alunos != -1) {setBreak = true;}
+                    else if (record.id != -1) {setBreak = true;}
                     found = true;
                     break;
                 default:
@@ -460,7 +460,7 @@ int orderedManipulator::findWhereEqual(string attribute, int value)
                     {
                         records.push_back(record);
                     }
-                    else if (record.n_alunos != -1) {setBreak = true;}
+                    else if (record.id != -1) {setBreak = true;}
                     found = true;
                     break;
                 default:
@@ -911,7 +911,7 @@ int orderedManipulator::findWhereBetween (string attribute, int value1, int valu
             this->closeForReading();
             if (j < value1){return -1;} 
         } 
-
+        
         this->openForReading();
 
         this->fileRead.seekg(head.headerSize + index1 * head.recordSize,ios::beg);
@@ -923,7 +923,7 @@ int orderedManipulator::findWhereBetween (string attribute, int value1, int valu
             this->fileRead.read((char *) &record, head.recordSize);
             records.push_back(record);
         }
-
+        
         int setBreak = false;
         int i = index2;
         
@@ -956,7 +956,7 @@ int orderedManipulator::findWhereBetween (string attribute, int value1, int valu
                     {
                         records.push_back(record);
                     }
-                    else if (record.n_alunos != -1) {setBreak = true;}
+                    else if (record.id != -1) {setBreak = true;}
                     found = true;
                     break;
                 default:
@@ -1237,89 +1237,228 @@ int orderedManipulator::removeOne(int id)
     this->fileRead.seekg(0, ios::beg);
     this->fileRead.read((char *) &head, sizeof(head));
     offset += sizeof(head);
-    for (i = 0; i < head.recordsAmount; i++)
-    {
-        this->fileRead.read((char *) &record, sizeof(FixedRecord));
-        blocksAccessed++;
-        if (record.id == id)
-        {
-            found = true;
-            break;
-        }
-        offset += sizeof(FixedRecord);
+    if (head.ordered_by == "id"){
+        this->closeForReading();
+        int index = orderedManipulator::binarySearcher(id);
+        offset = index * sizeof(record);
+    
     }
-
+    else{
+        for (i = 0; i < head.recordsAmount; i++)
+        {
+            this->fileRead.read((char *) &record, sizeof(FixedRecord));
+            blocksAccessed++;
+            if (record.id == id)
+            {
+                found = true;
+                break;
+            }
+            offset += sizeof(FixedRecord);
+        }
+    }
     if (!found)
     {
         return -1;
     }
-
     blocksAccessed += this->updateFreeListInsertDeleted(offset, head);
-    cout << "Blocks Accessed: " << blocksAccessed << endl;
+    //cout << "Blocks Accessed: " << blocksAccessed << endl;
    
     return 0;
 }
 
 int orderedManipulator::removeBetween(string attribute, int value1, int value2)
 {
-    orderedHeader <char[MAX_ORDERED_FIELD_SIZE]>head;
     FixedRecord record;
-    int attr, blocksAccessed = 0;
-    int offset, auxOffset;
-    int numDeleted = 0;
-    int i = 0;
+    orderedHeader <char[MAX_ORDERED_FIELD_SIZE]>head;
+    int numDeleted;
+    int attr, blocksAccessed,  i;
+    bool found = false;
     map<string, int> m = this->createMap();
     attr = m[attribute];
-    
-    offset = sizeof(orderedHeader<char[MAX_ORDERED_FIELD_SIZE]>);
-    auxOffset = offset;
-    do
-    {
-        this->openForReading();
-        this->fileRead.seekg(0, ios::beg);
-        this->fileRead.read((char *) &head, sizeof(head));
-        
-        this->fileRead.seekg(auxOffset, ios::beg);
-        this->fileRead.read((char *) &record, sizeof(FixedRecord));
+    this->openForReading();
+    this->fileRead.read((char *) &head, sizeof(head));
 
-        auxOffset = this->fileRead.tellg();
-        
+
+    this->fileRead.seekg(0, ios::end);
+    int sup = ((int)this->fileRead.tellg()-(head.headerSize))/sizeof(record)-1; //index of last element
+
+    int atord = m[head.ordered_by];
+    if (atord == attr){
         this->closeForReading();
-        switch (attr)
-        {
-            case 0: /*id*/
-                if (record.id >= value1 && record.id <= value2)
-                {
-                    blocksAccessed += this->updateFreeListInsertDeleted(offset, head);
-                    numDeleted++;
-                }
-                break;
-            case 5: /*tipoesc*/
-                if (record.tipoesc >= value1 && record.tipoesc <= value2)
-                {
-                    blocksAccessed += this->updateFreeListInsertDeleted(offset, head);
-                    numDeleted++;
-                }
-                break;
-            case 9: /*n_alunos*/
-                if (record.n_alunos >= value1 && record.n_alunos <= value2)
-                {
-                    blocksAccessed += this->updateFreeListInsertDeleted(offset, head);
-                    numDeleted++;
-                }
-                break;
-            default:
-                return -1;
+        int index1 = -1;
+        int index2 = -1;
+        int j = value1;
+        while (index1 == -1){
+            j++;
+            index1 = orderedManipulator::binarySearcher(j);
+            this->closeForReading();
+            if (j > value2){return -1;} 
+        } 
+        j = value2;
+        while (index2 == -1){
+            j--;
+            index2 = orderedManipulator::binarySearcher(j);
+            this->closeForReading();
+            if (j < value1){return -1;} 
+        } 
+        
+        this->openForReading();
+
+
+        this->updateFreeListInsertDeleted(index1 * sizeof(record), head);
+        numDeleted++;
+
+        
+        if (index1 != index2){
+            this->updateFreeListInsertDeleted(index2 * sizeof(record), head);
+            numDeleted++;
         }
-        offset += sizeof(FixedRecord);
-        i++;
-        blocksAccessed++;
-    }while (i < head.recordsAmount);
+        
+        int setBreak = false;
+        int i = index2;
+        
+        while (i< sup){
+            if (setBreak == true) {break;}
+            i++;
+            this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
+            this->fileRead.read((char *) &record, head.recordSize);
+
+            switch (attr)
+            {
+                case 0: /*id*/
+                    if (record.id <= value2)
+                    {
+                        this->updateFreeListInsertDeleted(i * sizeof(record), head);
+                        numDeleted++;
+                    }
+                    else if (record.id != -1) {setBreak = true;}
+                    found = true;
+                    break;
+                case 5: /*tipoesc*/
+                    if (record.tipoesc <= value2)
+                    {
+                        this->updateFreeListInsertDeleted(i * sizeof(record), head);
+                        numDeleted++;
+                    }
+                    else if (record.tipoesc != -1) {setBreak = true;}
+                    found = true;
+                    break;
+                case 9: /*n_alunos*/
+                    if (record.n_alunos <= value2)
+                    {
+                        this->updateFreeListInsertDeleted(i * sizeof(record), head);
+                        numDeleted++;
+                    }
+                    else if (record.id != -1) {setBreak = true;}
+                    found = true;
+                    break;
+                default:
+                    return -1;
+            }
+
+
+            
+        }
+        i = index1;
+        setBreak = false;
+        while (i>0){
+            if (setBreak == true) {break;}
+            i--;
+            this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
+            this->fileRead.read((char *) &record, head.recordSize);
+            switch (attr)
+            {
+                case 0: /*id*/
+                    if (record.id >= value1)
+                    {
+                        this->updateFreeListInsertDeleted(i * sizeof(record), head);
+                        numDeleted++;
+                    }
+                    else if (record.id != -1) {setBreak = true;}
+                    found = true;
+                    break;
+                case 5: /*tipoesc*/
+                    if (record.tipoesc >= value1)
+                    {
+                        this->updateFreeListInsertDeleted(i * sizeof(record), head);
+                        numDeleted++;
+                    }
+                    else if (record.tipoesc != -1) {setBreak = true;}
+                    found = true;
+                    break;
+                case 9: /*n_alunos*/
+                    if (record.n_alunos >= value1)
+                    {
+                        this->updateFreeListInsertDeleted(i * sizeof(record), head);
+                        numDeleted++;
+                    }
+                    else if (record.n_alunos != -1) {setBreak = true;}
+                    found = true;
+                    break;
+                default:
+                    return -1;
+            }
+
+
+            
+        }
+        i = index1;
+        while (i<index2-1){
+            i++;
+            this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
+            this->fileRead.read((char *) &record, head.recordSize);
+            if (record.id != -1)
+            {
+                this->updateFreeListInsertDeleted(i * sizeof(record), head);
+                numDeleted++;
+            }
+            
+        }
+        this->closeForReading();
+    }
+    else{
+        this->fileRead.seekg(sizeof(head), ios::beg);
+        for (i = 0; i < head.recordsAmount; i++)
+        {   cout << i << endl;
+            this->fileRead.read((char *) &record, sizeof(FixedRecord));
+            switch (attr)
+            {
+                case 0: /*id*/
+                    if (record.id >= value1 && record.id <= value2)
+                    {
+                        this->updateFreeListInsertDeleted(i * sizeof(record), head);
+                        numDeleted++;
+                    }
+                    found = true;
+                    break;
+                case 5: /*tipoesc*/
+                    if (record.tipoesc >= value1 && record.tipoesc <= value2)
+                    {
+                        this->updateFreeListInsertDeleted(i * sizeof(record), head);
+                        numDeleted++;
+                    }
+                    found = true;
+                    break;
+                case 9: /*n_alunos*/
+                    if (record.n_alunos >= value1 && record.n_alunos <= value2)
+                    {
+                        this->updateFreeListInsertDeleted(i * sizeof(record), head);
+                        numDeleted++;
+                    }
+                    found = true;
+                    break;
+                default:
+                    return -1;
+            }
+        }
+    }
+    blocksAccessed = i;
     
     cout << "Blocks Accessed: " << blocksAccessed << endl;
     cout << "Rows deleted: " << numDeleted << endl;
-    
     return 0;
+    
+
 }
 
 int orderedManipulator::removeBetween(string attribute, double value1, double value2)
