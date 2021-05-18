@@ -16,7 +16,8 @@ SOURCES = main.cpp FileCreator.cpp FixedRecord.cpp FileHeader.cpp FileManager.cp
 								 ./fixedHeap/FixedHeapFileCreator.cpp \
 								 ./fixedHeap/FixedHeapHeader.cpp \
 								 ./fixedHeap/FixedHeapManipulator.cpp \
-								 ./orderedFile/orderedManipulator.cpp
+								 ./orderedFile/*.cpp \
+								 ./hashFile/*.cpp
 MAIN = main
 MAINOBJS = $(SOURCES:.c=.o)
 

@@ -4,12 +4,12 @@
 #include <string>
 #include <stdio.h>
 #include <string.h>
+#include <sstream>
 #include <iostream>
 #define MAX_STRING_SIZE  64
 
 
 using namespace std;
-
 
 class FixedRecord
 {
@@ -17,9 +17,10 @@ class FixedRecord
     
     FixedRecord(){return;};
 
-    int readCSVLine(string line);
+    int readCSVLine(string line, bool hasId = false);
     int makeDeleted();
     int isDeleted();
+    void getRecordFieldsAsCSV(char * out, int numberOfCharacters, bool hasId = false);
 
     int id;
     char nomedep[MAX_STRING_SIZE], de[MAX_STRING_SIZE], distr[MAX_STRING_SIZE],
@@ -27,4 +28,5 @@ class FixedRecord
     int tipoesc, n_alunos;
     double cod_esc;
 };
+
 #endif

@@ -53,12 +53,18 @@ class FileManipulator
         virtual int findWhereBetween(string attribute, double value1, double value2){return 0;};
         virtual int removeOne(int id){return 0;};
 
-        virtual int insertOne(string record){return 0;};
+        virtual int insertOne(string record, bool hasId = false){return 0;};
         virtual int insertMultiple(vector<string> inserts){return 0;};
 
         virtual int reorganize(){return 0;};
         virtual int createTempFile(){return 0;};
         virtual int openTempFileWriting(){return 0;};
         virtual int closeTempFileWriting(){return 0;};
+
+        virtual int removeBetween(string attribute, int value1, int value2){return 0;};
+        virtual int removeBetween(string attribute, double value1, double value2){return 0;};
+
+        virtual int getHeaderInfo(){return 0;};
+
 };
 #endif
