@@ -1185,5 +1185,7 @@ int HashManipulator::reorganize ()
     command << "mv ./tmp.dat " << this->fileName << endl;
     system(command.str().c_str());
 
+    system("rm tmp.csv");
+
     return 0;    
 }
