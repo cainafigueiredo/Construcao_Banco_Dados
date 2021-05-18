@@ -4,9 +4,6 @@
 #include "fixedHeap/FixedHeapFileCreator.h"
 #include "fixedHeap/FixedHeapHeader.h"
 #include "fixedHeap/FixedHeapManipulator.h"
-#include "orderedFile/orderedHeader.h"
-#include "orderedFile/orderedFileCreator.h"
-#include "orderedFile/orderedManipulator.h"
 #include <iostream>
 #include "./hashFile/HashFileCreator.h"
 #include "./fixedHeap/FixedHeapFileCreator.h"
@@ -30,31 +27,6 @@ using namespace std;
 #define HASH_ORGANIZATION "externalHash"
 
 #define NEW_BASE_HELP "newBase:\nOrganização do arquivo | Caminho para o CSV | Caminho e nome do arquivo de destino\n"
-
-int teste_ordenacao(orderedManipulator &om)
-{
-    FixedRecord *rec_curr,*rec_prev;
-    cout<<"checking ordered file"<<endl;
-    // rec_prev = om.findNext();
-    om.currPos = 0;
-    rec_prev = om.findNext();
-    rec_curr = om.findNext();
-    while(!strcmp(rec_curr->de,""))
-    {
-        wrapper cur(om.ordered_by,rec_curr),prev(om.ordered_by,rec_prev);
-        if(compare_records(prev,cur) != true)
-        {
-            cout<<"ARQUIVO NÃO ORDENADO!"<<endl;
-            return 0;
-        }
-        rec_prev = rec_curr;
-        // cout<<rec_curr->de<<endl;
-        rec_curr = om.findNext();
-        // cout<<"|"<<rec_curr<<"|"<<endl;
-    }
-    cout<<"ARQUIVO ORDENADO!"<<endl;
-    return 1;
-}
 
 
 int main(int argc, char *argv[]) {
@@ -106,11 +78,15 @@ int main(int argc, char *argv[]) {
 		}
 
 		else if (command == INSERT_MULTIPLE_INSTRUCTION) {
-			string recordData1 = argv[i+1];
-			string recordData2 = argv[i+2];
-			vector<string> records {recordData1, recordData2};
-			cout << manager->fm->insertMultiple(records) << endl;
-			i = i+2;
+			vector<string> queries;
+			int j;
+			int numberOfQueries = atoi(argv[i+1]);
+			for (j = 1; j <= numberOfQueries; j++)
+			{
+				queries.push_back(argv[i+j+1]);
+			}
+			cout << manager->fm->insertMultiple(queries) << endl;
+			i = j+i;
 		}
 
 		else if (command == FIND_ONE_BY_ID_INSTRUCTION) {
