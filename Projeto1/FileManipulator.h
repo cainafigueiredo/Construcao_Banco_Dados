@@ -18,7 +18,6 @@ class FileManipulator
         string fileName;
         ifstream fileRead;
         ofstream fileWrite;
-
         ofstream tempFile;
         
         static map<string, int> createMap()

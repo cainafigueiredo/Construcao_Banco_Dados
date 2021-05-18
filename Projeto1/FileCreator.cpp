@@ -53,6 +53,7 @@ int FileCreator::openNewFileWriting()
     }
     return 0;
 }
+
 int FileCreator::openNewFileReading()
 {
     this->inNewFile.open(this->newFileName, fstream::in | fstream::binary);

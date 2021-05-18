@@ -1,0 +1,848 @@
+#include "orderedManipulator.h"
+#include "orderedHeader.h"
+#include <cstring>
+#include <vector>
+#include <algorithm>
+
+vector<wrapper> make_wrapper_buffer(FixedRecord *buff,int order,int size_buff)
+{
+    vector<wrapper> vec_wp;
+    int i = 0;
+    for(;i<size_buff;i++)
+    {
+        wrapper wp(order,&buff[i]);
+        vec_wp.push_back(wp);
+    }
+    // delete buff;
+    return vec_wp;
+}
+
+//retorna true quando a.campo < b.campo
+bool compare_records(wrapper &a,wrapper &b)
+{   
+    bool resultado = false;
+    switch(a.compare_by)
+    {
+        case 0:    
+            resultado = (a.r->id < b.r->id);   
+            break;
+        case 1:
+            resultado = (strcmp(a.r->nomedep,b.r->nomedep) <= 0);
+            break;
+        case 2:
+            resultado = (strcmp(a.r->de,b.r->de) <= 0);
+            cout<<"LEFT: "<<a.r->de<<"|RIGHT: "<<b.r->de<<"|result "<<resultado<<endl;
+            break;
+        case 3:
+            resultado =  (strcmp(a.r->distr,b.r->distr) <= 0) ;
+            break;
+        case 4:
+            resultado = (strcmp(a.r->mun,b.r->mun) <=0 );
+            break;
+        case 5:
+            resultado = (a.r->tipoesc <= b.r->tipoesc);
+            break;
+        case 6:
+            resultado = (a.r->cod_esc <= b.r->cod_esc);
+            break;
+        case 7:
+            resultado = (strcmp(a.r->nomesc,b.r->nomesc) <= 0);
+            break;
+        case 8:
+            resultado = (strcmp(a.r->ds_pais,b.r->ds_pais) <= 0);
+            break;
+        case 9:
+            resultado = (a.r->n_alunos <= b.r->n_alunos);
+            break;
+    }
+    return resultado;
+}
+
+void orderedManipulator::writeBufferToTempFile(vector<wrapper> buffer,orderedHeader<char[MAX_ORDERED_FIELD_SIZE]> *head)
+{
+    this->createTempFile();
+    this->openTempFileWriting();
+    this->tempFile.seekp(0, ios::beg);
+    if(head)
+    {
+        this->tempFile.write( (char *) head, sizeof(orderedHeader<char[MAX_ORDERED_FIELD_SIZE]>));
+        cout<<head->ordered_by<<endl;
+    }
+    for(int i=0; i < buffer.size(); i++){
+        FixedRecord *cur = buffer[i].r;
+        this->tempFile.write( (char *) cur, sizeof(FixedRecord));
+        cout<<cur->de<<endl;
+    }
+    this->closeTempFileWriting();
+    remove (this->fileName.c_str());
+    rename ((this->fileName + ".temp").c_str(), this->fileName.c_str());
+}
+
+void orderedManipulator()
+{
+
+}
+
+void orderedManipulator::ordenateFile()
+{
+    orderedHeader<char[MAX_ORDERED_FIELD_SIZE]> head; 
+    this->openForReading();   
+    this->fileRead.read((char *) &head, sizeof(head));
+    int total = int(MAX_SIZE_IN_MEM/head.recordSize);
+    FixedRecord *buffer = new FixedRecord[total];
+    if(MAX_SIZE_IN_MEM >= head.recordsAmount * head.recordSize )
+    {   //LÊ E ORDENA NA RAM
+        cout<<"Comecando"<<endl;
+        for (int i = 0; i < head.recordsAmount; i++)
+        {   
+            this->fileRead.read((char *) &buffer[i], sizeof(FixedRecord));   
+            // this->printRecord(buffer[i]);
+        }
+        this->closeForReading();
+        cout<<"ok aqui"<<endl;
+        cout<<&buffer[0]<<endl;
+        vector<wrapper> wp = make_wrapper_buffer(buffer,this->ordered_by,head.recordsAmount);
+        this->printSchema();
+        cout<<"Finished reading recs"<<endl;
+        sort(wp.begin(), wp.end(), compare_records);
+        cout<<"Finished sorting recs"<<endl;
+        // for (int i = 0; i < head.recordsAmount; i++)
+        // {   
+        //     this->printRecord(*wp[i].r);
+        // }
+        this->writeBufferToTempFile(wp,&head);
+    }
+
+}
+
+FixedRecord *orderedManipulator::findNext()
+{
+    FixedRecord *record = NULL;
+    this->openForReading();
+    this->fileRead.seekg(this->currPos,ios::beg);
+    if(this->currPos == 0)
+    {
+        orderedHeader <char[MAX_ORDERED_FIELD_SIZE]> head;
+        this->fileRead.read((char *) &head, sizeof(head));
+        this->currPos = this->fileRead.tellg();
+        cout<<head.extension_file<<"| tellg: "<<this->currPos<<endl;
+    }
+    if(!this->fileRead.eof())
+    {
+        record = new FixedRecord;
+        this->fileRead.read((char *) record, sizeof(FixedRecord));
+        this->currPos = this->fileRead.tellg(); 
+        // cout<<record->de<<"| tellg: "<<this->currPos<<endl;
+    }
+    else
+        this->currPos = 0;
+    this->closeForReading();
+    return record;
+}
+
+int orderedManipulator::printRecord(FixedRecord r)
+{
+    cout << r.id << "\t" << r.nomedep << "\t" << r.de << "\t" <<
+    r.distr << "\t" << r.mun << "\t" << r.tipoesc << "\t" << 
+    r.cod_esc << "\t" << r.nomesc << "\t" << r.ds_pais << "\t" << r.n_alunos << endl;
+    return 0;
+}
+
+int orderedManipulator::insertHeader(orderedHeader <char[MAX_ORDERED_FIELD_SIZE]> head)
+{
+    this->openForWriting();
+    this->fileWrite.seekp(0, ios::beg);
+    this->fileWrite.write( (char *) &head, sizeof(head));
+    this->closeForWriting();
+    return 0;
+}
+
+int orderedManipulator::findOne(int id)
+{
+    FixedRecord record;
+    orderedHeader<char[MAX_ORDERED_FIELD_SIZE]> head;
+    int blocksAccessed;
+    bool found = false;
+    this->openForReading();
+    this->fileRead.read((char *) &head, sizeof(head));
+    for (int i = 0; i < head.recordsAmount; i++)
+    {
+        this->fileRead.read((char *) &record, sizeof(FixedRecord));
+        if (record.id == id)
+        {
+            blocksAccessed = i+1;
+            i = head.recordsAmount;
+            found = true;
+        }
+    }
+
+    if (!found)
+    {
+        return -1;
+    }
+    this->printSchema();
+    this->printRecord(record);
+    cout << "Blocks Acessed: " << blocksAccessed << endl;
+    this->closeForReading();
+
+    return 0;
+}
+
+int orderedManipulator::findWhereEqual(string attribute, int value)
+{
+    FixedRecord record;
+    orderedHeader <char[MAX_ORDERED_FIELD_SIZE]>head;
+    vector<FixedRecord> records;
+    int attr, blocksAccessed,  i;
+    bool found = false;
+    map<string, int> m = this->createMap();
+    attr = m[attribute];
+    
+    this->openForReading();
+    this->fileRead.read((char *) &head, sizeof(head));
+    for (i = 0; i < head.recordsAmount; i++)
+    {
+        this->fileRead.read((char *) &record, sizeof(FixedRecord));
+        switch (attr)
+        {
+            case 0: /*id*/
+                if (record.id == value)
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            case 5: /*tipoesc*/
+                if (record.tipoesc == value)
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            case 9: /*n_alunos*/
+                if (record.n_alunos == value)
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            default:
+                return -1;
+        }
+    }
+
+    blocksAccessed = i;
+
+    if (!found)
+    {
+        return -1;
+    }
+
+    this->printSchema();
+    for (auto const &r : records)
+    {
+        this->printRecord(r);
+    }
+    cout << "Blocks Acessed: " << blocksAccessed << endl;
+
+    this->closeForReading();
+    return 0;
+    
+}
+int orderedManipulator::findWhereEqual(string attribute, double value)
+{
+    FixedRecord record;
+    orderedHeader <char[MAX_ORDERED_FIELD_SIZE]>head;
+    vector<FixedRecord> records;
+    int attr, blocksAccessed, i;
+    bool found = false;
+    map<string, int> m = this->createMap();
+    attr = m[attribute];
+    
+    this->openForReading();
+    this->fileRead.read((char *) &head, sizeof(head));
+    for (i = 0; i < head.recordsAmount; i++)
+    {
+        this->fileRead.read((char *) &record, sizeof(FixedRecord));
+        switch (attr)
+        {
+            case 6: /*cod_esc*/
+                if (record.cod_esc == value)
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            default:
+                return -1;
+        }
+    }
+    
+    blocksAccessed = i;
+    if (!found)
+    {
+        return -1;
+    }
+
+    this->printSchema();
+    for (auto const &r : records)
+    {
+        this->printRecord(r);
+    }
+
+    cout << "Blocks Acessed: " << blocksAccessed << endl;
+   
+    this->closeForReading();
+    return 0;
+   
+}
+int orderedManipulator::findWhereEqual(string attribute, string value)
+{
+    FixedRecord record;
+    orderedHeader <char[MAX_ORDERED_FIELD_SIZE]>head;
+    vector<FixedRecord> records;
+    int attr, blocksAccessed, i;
+    bool found = false;
+    map<string, int> m = this->createMap();
+    attr = m[attribute];
+    
+    this->openForReading();
+    this->fileRead.read((char *) &head, sizeof(head));
+    for (i = 0; i < head.recordsAmount; i++)
+    {
+        this->fileRead.read((char *) &record, sizeof(FixedRecord));
+        switch (attr)
+        {
+            case 1: /*nomedep*/
+                if (!string(record.nomedep).compare(value))
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            case 2: /*de*/
+                if (!string(record.de).compare(value))
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            case 3: /*distr*/
+                if (!string(record.distr).compare(value))
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            case 4: /*mun*/
+                if (!string (record.mun).compare(value))
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            case 7: /*nomesc*/
+                if (!string (record.nomesc).compare(value))
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            case 8: /*ds_pais*/
+                if (!string (record.ds_pais).compare(value))
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            default:
+                return -1;
+        }
+    }
+
+    blocksAccessed = i;
+    
+    if (!found)
+    {
+        return -1;
+    }
+
+    this->printSchema();
+    for (auto const &r : records)
+    {
+        this->printRecord(r);
+    }
+
+    cout << "Blocks Acessed: " << blocksAccessed << endl;
+   
+    this->closeForReading();
+    return 0;
+}
+
+int orderedManipulator::findWhereBetween (string attribute, int value1, int value2)
+{
+    FixedRecord record;
+    orderedHeader <char[MAX_ORDERED_FIELD_SIZE]>head;
+    vector<FixedRecord> records;
+    int attr, blocksAccessed, i;
+    bool found = false;
+    map<string, int> m = this->createMap();
+    attr = m[attribute];
+    
+    this->openForReading();
+    this->fileRead.read((char *) &head, sizeof(head));
+    for (i = 0; i < head.recordsAmount; i++)
+    {
+        this->fileRead.read((char *) &record, sizeof(FixedRecord));
+        switch (attr)
+        {
+            case 0: /*id*/
+                if (record.id >= value1 && record.id <= value2)
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            case 5: /*tipoesc*/
+                if (record.tipoesc >= value1 && record.tipoesc <= value2)
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            case 9: /*n_alunos*/
+                if (record.n_alunos >= value1 && record.n_alunos <= value2)
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            default:
+                return -1;
+        }
+    }
+
+    blocksAccessed = i;
+    
+    if (!found)
+    {
+        return -1;
+    }
+
+    this->printSchema();
+    for (auto const &r : records)
+    {
+        this->printRecord(r);
+    }
+
+    cout << "Blocks Acessed: " << blocksAccessed << endl;
+   
+    this->closeForReading();
+    return 0;
+}
+
+int orderedManipulator::findWhereBetween (string attribute, double value1, double value2)
+{
+    FixedRecord record;
+    orderedHeader <char[MAX_ORDERED_FIELD_SIZE]>head;
+    vector<FixedRecord> records;
+    int attr, blocksAccessed, i;
+    bool found = false;
+    map<string, int> m = this->createMap();
+    attr = m[attribute];
+    
+    this->openForReading();
+    this->fileRead.read((char *) &head, sizeof(head));
+    for (i = 0; i < head.recordsAmount; i++)
+    {
+        this->fileRead.read((char *) &record, sizeof(FixedRecord));
+        switch (attr)
+        {
+            case 6: /*cod_esc*/
+                if (record.cod_esc >= value1 && record.cod_esc <= value2)
+                {
+                    records.push_back(record);
+                }
+                found = true;
+                break;
+            default:
+                return -1;
+        }
+    }
+
+    blocksAccessed = i;
+    
+    if (!found)
+    {
+        return -1;
+    }
+
+    this->printSchema();
+    for (auto const &r : records)
+    {
+        this->printRecord(r);
+    }
+
+    cout << "Blocks Acessed: " << blocksAccessed << endl;
+   
+    this->closeForReading();
+    return 0;
+}
+
+int orderedManipulator::removeOne(int id)
+{
+    orderedHeader<char[MAX_ORDERED_FIELD_SIZE]> head;
+    FixedRecord record;
+    bool found = false;
+    int i, blocksAccessed = 0;
+    int offset = 0;
+
+    this->openForReading();
+    this->fileRead.seekg(0, ios::beg);
+    this->fileRead.read((char *) &head, sizeof(head));
+    offset += sizeof(head);
+    for (i = 0; i < head.recordsAmount; i++)
+    {
+        this->fileRead.read((char *) &record, sizeof(FixedRecord));
+        blocksAccessed++;
+        if (record.id == id)
+        {
+            found = true;
+            break;
+        }
+        offset += sizeof(FixedRecord);
+    }
+
+    if (!found)
+    {
+        return -1;
+    }
+
+    blocksAccessed += this->updateFreeListInsertDeleted(offset, head);
+    cout << "Blocks Accessed: " << blocksAccessed << endl;
+   
+    return 0;
+}
+
+int orderedManipulator::removeBetween(string attribute, int value1, int value2)
+{
+    orderedHeader <char[MAX_ORDERED_FIELD_SIZE]>head;
+    FixedRecord record;
+    int attr, blocksAccessed = 0;
+    int offset, auxOffset;
+    int numDeleted = 0;
+    int i = 0;
+    map<string, int> m = this->createMap();
+    attr = m[attribute];
+    
+    offset = sizeof(orderedHeader<char[MAX_ORDERED_FIELD_SIZE]>);
+    auxOffset = offset;
+    do
+    {
+        this->openForReading();
+        this->fileRead.seekg(0, ios::beg);
+        this->fileRead.read((char *) &head, sizeof(head));
+        
+        this->fileRead.seekg(auxOffset, ios::beg);
+        this->fileRead.read((char *) &record, sizeof(FixedRecord));
+
+        auxOffset = this->fileRead.tellg();
+        
+        this->closeForReading();
+        switch (attr)
+        {
+            case 0: /*id*/
+                if (record.id >= value1 && record.id <= value2)
+                {
+                    blocksAccessed += this->updateFreeListInsertDeleted(offset, head);
+                    numDeleted++;
+                }
+                break;
+            case 5: /*tipoesc*/
+                if (record.tipoesc >= value1 && record.tipoesc <= value2)
+                {
+                    blocksAccessed += this->updateFreeListInsertDeleted(offset, head);
+                    numDeleted++;
+                }
+                break;
+            case 9: /*n_alunos*/
+                if (record.n_alunos >= value1 && record.n_alunos <= value2)
+                {
+                    blocksAccessed += this->updateFreeListInsertDeleted(offset, head);
+                    numDeleted++;
+                }
+                break;
+            default:
+                return -1;
+        }
+        offset += sizeof(FixedRecord);
+        i++;
+        blocksAccessed++;
+    }while (i < head.recordsAmount);
+    
+    cout << "Blocks Accessed: " << blocksAccessed << endl;
+    cout << "Rows deleted: " << numDeleted << endl;
+    
+    return 0;
+}
+
+int orderedManipulator::removeBetween(string attribute, double value1, double value2)
+{
+    orderedHeader <char[MAX_ORDERED_FIELD_SIZE]>head;
+    FixedRecord record;
+    int attr, blocksAccessed = 0;
+    int offset, auxOffset;
+    int numDeleted = 0;
+    int i = 0;
+    map<string, int> m = this->createMap();
+    attr = m[attribute];
+    
+    offset = sizeof(orderedHeader<char[MAX_ORDERED_FIELD_SIZE]>);
+    auxOffset = offset;
+    do
+    {
+        this->openForReading();
+        this->fileRead.seekg(0, ios::beg);
+        this->fileRead.read((char *) &head, sizeof(head));
+        
+        this->fileRead.seekg(auxOffset, ios::beg);
+        this->fileRead.read((char *) &record, sizeof(FixedRecord));
+
+        auxOffset = this->fileRead.tellg();
+        
+        this->closeForReading();
+        switch (attr)
+        {
+            case 0: /*id*/
+                if (record.id >= value1 && record.id <= value2)
+                {
+                    blocksAccessed += this->updateFreeListInsertDeleted(offset, head);
+                    numDeleted++;
+                }
+                break;
+            case 5: /*tipoesc*/
+                if (record.tipoesc >= value1 && record.tipoesc <= value2)
+                {
+                    blocksAccessed += this->updateFreeListInsertDeleted(offset, head);
+                    numDeleted++;
+                }
+                break;
+            case 9: /*n_alunos*/
+                if (record.n_alunos >= value1 && record.n_alunos <= value2)
+                {
+                    blocksAccessed += this->updateFreeListInsertDeleted(offset, head);
+                    numDeleted++;
+                }
+                break;
+            default:
+                return -1;
+        }
+        offset += sizeof(FixedRecord);
+        i++;
+    }while (i < head.recordsAmount);
+
+    cout << "Blocks Accessed: " << blocksAccessed << endl;
+    cout << "Rows deleted: " << numDeleted << endl;
+    
+    return 0;
+}
+
+int orderedManipulator::updateFreeListInsertDeleted(int offset, orderedHeader <char[MAX_ORDERED_FIELD_SIZE]>head)
+{
+    FixedRecord deleted;
+    FixedRecord record;
+    int blocksAccessed = 0;
+
+    int auxOffset;
+    deleted.makeDeleted();
+    /*storing offset for next element at n_alunos*/
+    if (head.freeList == -1)
+    {
+        head.freeList = offset;
+        deleted.n_alunos = -1;
+    }
+    else /*if there is a list of deleted blocks, find the last one*/
+    {
+        /*jump to the first*/
+        auxOffset = head.freeList;
+        this->openForReading();
+        do
+        {
+            this->fileRead.seekg(auxOffset, ios::beg);
+            this->fileRead.read((char *) &record, sizeof(FixedRecord));
+            blocksAccessed++;
+            auxOffset = record.n_alunos;
+        } while (record.n_alunos != -1);
+        record.n_alunos = offset;
+        
+        /*get the position of the last record in the list, to overwrite it
+        with the new n_alunos info*/
+        this->fileRead.seekg(-sizeof(FixedRecord), ios::cur);
+        auxOffset = this->fileRead.tellg();
+        this->closeForReading();
+        
+        this->openForWriting();
+        this->fileWrite.seekp(auxOffset, ios::beg);
+        this->fileWrite.write((char *) &record, sizeof(record));
+        this->closeForWriting();
+
+    }
+
+    this->closeForReading();
+
+    this->openForWriting();
+    this->fileWrite.seekp(offset, ios::beg);
+    this->fileWrite.write( (char *) &deleted, sizeof(deleted));
+    this->closeForWriting();
+
+    this->insertHeader(head);
+    
+    return blocksAccessed;
+}
+
+int orderedManipulator::insertOne(string record)
+{
+    FixedRecord newR;
+    orderedHeader <char[MAX_ORDERED_FIELD_SIZE]>head;
+    int offset;
+    int acessedBlocks = 0;
+
+    this->openForReading();
+    this->fileRead.seekg(0, ios::beg);
+    this->fileRead.read( (char *) &head, sizeof(head));
+    this->closeForReading();
+    
+    /*botar o id*/
+    newR.readCSVLine(record);
+    newR.id = head.lastID + 1;
+    head.lastID++;
+    /*if there is a deleted space*/
+    if (head.freeList != 0)
+    {
+        FixedRecord auxRecord;
+        this->openForReading();
+        this->fileRead.seekg(head.freeList, ios::beg);
+        this->fileRead.read( (char *) &auxRecord, sizeof(FixedRecord));
+        acessedBlocks++;
+        this->closeForReading();
+
+        this->openForWriting();
+        this->fileWrite.seekp(head.freeList, ios::beg);
+        this->fileWrite.write((char *) &newR, sizeof(FixedRecord));
+        head.freeList = auxRecord.n_alunos;
+        this->closeForWriting();
+        this->insertHeader(head);
+
+        cout << "Accessed Blocks: " << acessedBlocks << endl;
+        return 0;
+    }
+    
+    offset = (head.recordsAmount * sizeof(FixedRecord)) + sizeof(orderedHeader<char[MAX_ORDERED_FIELD_SIZE]>);
+    this->openForWriting();
+    this->fileWrite.seekp(offset, ios::beg);
+    this->fileWrite.write((char *) &newR, sizeof(FixedRecord));
+    this->closeForWriting();
+    head.recordsAmount++;
+    this->insertHeader(head);
+
+    cout << "Accessed Blocks: " << acessedBlocks << endl;
+    return 0;
+}
+
+int orderedManipulator::insertMultiple(vector<string> inserts)
+{
+    for (auto const &record: inserts)
+    {
+        this->insertOne(record);
+    }
+
+    return 0;
+}
+
+int orderedManipulator::reorganize()
+{
+    FixedRecord record;
+    orderedHeader <char[MAX_ORDERED_FIELD_SIZE]>head;
+    int recordCount = 0;
+    int accessedBlocks = 0;
+
+    this->openForReading();
+    this->fileRead.seekg(0, ios::beg);
+    this->fileRead.read((char *) &head, sizeof(orderedHeader<char[MAX_ORDERED_FIELD_SIZE]>));
+    this->closeForReading();
+    
+    if (head.freeList == 0)
+    {
+        return 0;
+    }
+
+    this->createTempFile();
+    
+    this->openTempFileWriting();
+    this->openForReading();
+    
+    this->fileRead.seekg(sizeof(orderedHeader<char[MAX_ORDERED_FIELD_SIZE]>), ios::beg);
+    this->tempFile.seekp(0, ios::beg);
+    this->tempFile.write( (char *) &head, sizeof(orderedHeader<char[MAX_ORDERED_FIELD_SIZE]>));
+    for (int i = 0; i < head.recordsAmount; i++)
+    {
+        this->fileRead.read ( (char *) &record, sizeof(FixedRecord));
+        if (record.id != -1)
+        {
+            this->tempFile.write( (char *) &record, sizeof(FixedRecord));
+            recordCount++;
+        }
+        accessedBlocks++;
+    }
+    head.recordsAmount = recordCount;
+    this->tempFile.seekp(0, ios::beg);
+    this->tempFile.write( (char *) &head, sizeof (orderedHeader<char[MAX_ORDERED_FIELD_SIZE]>));
+    
+    this->closeForReading();
+    this->closeTempFileWriting();
+
+    remove (this->fileName.c_str());
+    rename ((this->fileName + ".temp").c_str(), this->fileName.c_str());
+    
+    cout << "Accessed Blocks: " << accessedBlocks << endl;
+    return 0;
+}
+
+
+int orderedManipulator::createTempFile(string fileName)
+{
+    this->tempFile.open(fileName + ".temp", ios::binary | ios::out);
+    if (!this->tempFile.good())
+    {
+        return -1;
+    }
+    this->tempFile.close();
+    return 0;
+}
+
+int orderedManipulator::createTempFile()
+{
+    this->tempFile.open(this->fileName + ".temp", ios::binary | ios::out);
+    if (!this->tempFile.good())
+    {
+        return -1;
+    }
+    this->tempFile.close();
+    return 0;
+}
+
+int orderedManipulator::openTempFileWriting()
+{
+    this->tempFile.open(this->fileName + ".temp", fstream::binary | ios::out | ios::in);
+    if (!this->tempFile.is_open())
+    {
+        return -1;
+    }
+    return 0;
+}
+
+int orderedManipulator::closeTempFileWriting()
+{
+    this->tempFile.close();
+    return 0;
+}

@@ -7,8 +7,8 @@ AR = ar
 
 #linkedit
 DEBUG = -D _MY_DEBUG_
-CFLAGS = -Wall -g
-LDFLAGS = -Wall
+CFLAGS = -Wall -g -std=gnu++11
+LDFLAGS = -Wall -std=gnu++11
 
 AFLAGS = -r
 
@@ -16,6 +16,7 @@ SOURCES = main.cpp FileCreator.cpp FixedRecord.cpp FileHeader.cpp FileManager.cp
 								 ./fixedHeap/FixedHeapFileCreator.cpp \
 								 ./fixedHeap/FixedHeapHeader.cpp \
 								 ./fixedHeap/FixedHeapManipulator.cpp \
+								 ./orderedFile/*.cpp \
 								 ./hashFile/*.cpp
 MAIN = main
 MAINOBJS = $(SOURCES:.c=.o)

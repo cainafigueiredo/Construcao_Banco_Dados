@@ -8,6 +8,7 @@
 #include <iostream>
 #define MAX_STRING_SIZE  64
 
+
 using namespace std;
 
 class FixedRecord
