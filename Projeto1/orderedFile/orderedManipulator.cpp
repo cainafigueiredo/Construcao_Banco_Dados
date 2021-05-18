@@ -57,6 +57,7 @@ int orderedManipulator::binarySearcher(int value){
     int sup = ((int)this->fileRead.tellg()-(head.headerSize))/sizeof(recordHigh)-1; //index of last element
 
     i = 0;
+    this->blockParc = 0;
     while (i<10){
         i++;
 
@@ -67,6 +68,9 @@ int orderedManipulator::binarySearcher(int value){
         this->fileRead.read((char *) &recordMed, head.recordSize);
         this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
         this->fileRead.read((char *) &recordHigh, head.recordSize);
+
+        this->blockParc+=3;
+
         switch (attr)
         {
             case 0: /*id*/
@@ -140,6 +144,7 @@ int orderedManipulator::binarySearcher(double value){
 
 
     i = 0;
+    this->blockParc = 0;
     while (i<999999999){
         i++;
 
@@ -150,6 +155,8 @@ int orderedManipulator::binarySearcher(double value){
         this->fileRead.read((char *) &recordMed, head.recordSize);
         this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
         this->fileRead.read((char *) &recordHigh, head.recordSize);
+        
+        this->blockParc +=3;
         switch (attr)
         {
             case 6: /*cod_esc*/
@@ -198,7 +205,7 @@ int orderedManipulator::binarySearcher(string value){
     i = 0;
 
 
-
+    this->blockParc = 0;
 
     while (i<99999999){
         i++;
@@ -210,6 +217,9 @@ int orderedManipulator::binarySearcher(string value){
         this->fileRead.read((char *) &recordMed, head.recordSize);
         this->fileRead.seekg(head.headerSize + sup * head.recordSize,ios::beg);
         this->fileRead.read((char *) &recordHigh, head.recordSize);
+
+        this->blockParc += 3;
+
         switch (attr)
        {
             case 1: /*nomedep*/
@@ -317,19 +327,21 @@ int orderedManipulator::findOne(int id)
 {
     FixedRecord record;
     orderedHeader<char[MAX_ORDERED_FIELD_SIZE]> head;
-    int blocksAccessed;
+    int blocksAccessed=0;
     bool found = false;
     this->openForReading();
     this->fileRead.read((char *) &head, sizeof(head));
     this->closeForReading();
     if (!orderedManipulator::comparator(head.ordered_by, "id")){
-        int ind = orderedManipulator::binarySearcher(id);
+        int ind =  this->binarySearcher(id);
+        blocksAccessed += this->blockParc;
         if (id == -1){return -1;}
         this->fileRead.seekg(head.headerSize + ind * head.recordSize,ios::beg);
         this->fileRead.read((char *) &record, sizeof(FixedRecord));
+        blocksAccessed += 1;
         this->printSchema();
         this->printRecord(record);
-        //cout << "Blocks Acessed: " << blocksAccessed << endl;
+        cout << "Blocks Acessed: " << blocksAccessed << endl;
         this->closeForReading();
         return 0;
     }
@@ -368,6 +380,7 @@ int orderedManipulator::findWhereEqual(string attribute, int value)
     orderedHeader <char[MAX_ORDERED_FIELD_SIZE]>head;
     vector<FixedRecord> records;
     int attr, blocksAccessed,  i;
+    blocksAccessed = 0;
     bool found = false;
     map<string, int> m = this->createMap();
     attr = m[attribute];
@@ -384,11 +397,12 @@ int orderedManipulator::findWhereEqual(string attribute, int value)
     if (atord == attr){
         this->closeForReading();
         int index = orderedManipulator::binarySearcher(value);
-        
+        blocksAccessed+= this->blockParc;
+        cout <<blocksAccessed << endl;
         this->fileRead.seekg(head.headerSize + index * head.recordSize,ios::beg);
         this->fileRead.read((char *) &record, head.recordSize);
         records.push_back(record);
-
+        blocksAccessed+=1;
         int setBreak = false;
         int i = index;
         while (i< sup){
@@ -396,7 +410,7 @@ int orderedManipulator::findWhereEqual(string attribute, int value)
             i++;
             this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
             this->fileRead.read((char *) &record, head.recordSize);
-
+            blocksAccessed+=1;
             switch (attr)
             {
                 case 0: /*id*/
@@ -437,6 +451,7 @@ int orderedManipulator::findWhereEqual(string attribute, int value)
             i--;
             this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
             this->fileRead.read((char *) &record, head.recordSize);
+            blocksAccessed+=1;
             switch (attr)
             {
                 case 0: /*id*/
@@ -505,8 +520,9 @@ int orderedManipulator::findWhereEqual(string attribute, int value)
                     return -1;
             }
         }
-    }
     blocksAccessed = i;
+    }
+    
 
     if (!found)
     {
@@ -518,7 +534,7 @@ int orderedManipulator::findWhereEqual(string attribute, int value)
     {
         this->printRecord(r);
     }
-    //cout << "Blocks Acessed: " << blocksAccessed << endl;
+    cout << "Blocks Acessed: " << blocksAccessed << endl;
 
     this->closeForReading();
     return 0;
@@ -532,6 +548,7 @@ int orderedManipulator::findWhereEqual(string attribute, double value)
     orderedHeader <char[MAX_ORDERED_FIELD_SIZE]>head;
     vector<FixedRecord> records;
     int attr, blocksAccessed,  i;
+    blocksAccessed = 0;
     bool found = false;
     map<string, int> m = this->createMap();
     attr = m[attribute];
@@ -548,11 +565,11 @@ int orderedManipulator::findWhereEqual(string attribute, double value)
     if (atord == attr){
         this->closeForReading();
         int index = orderedManipulator::binarySearcher(value);
-        
+        blocksAccessed+= this->blockParc;
         this->fileRead.seekg(head.headerSize + index * head.recordSize,ios::beg);
         this->fileRead.read((char *) &record, head.recordSize);
         records.push_back(record);
-
+        blocksAccessed+=1;
         int setBreak = false;
         int i = index;
         while (i< sup){
@@ -560,7 +577,7 @@ int orderedManipulator::findWhereEqual(string attribute, double value)
             i++;
             this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
             this->fileRead.read((char *) &record, head.recordSize);
-
+            blocksAccessed+=1;
             switch (attr)
             {
                 case 6: 
@@ -585,6 +602,7 @@ int orderedManipulator::findWhereEqual(string attribute, double value)
             i--;
             this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
             this->fileRead.read((char *) &record, head.recordSize);
+            blocksAccessed+=1;
             switch (attr)
             {
                 case 6: 
@@ -622,8 +640,9 @@ int orderedManipulator::findWhereEqual(string attribute, double value)
                     return -1;
             }
         }
-    }
     blocksAccessed = i;
+    }
+    
 
     if (!found)
     {
@@ -635,7 +654,7 @@ int orderedManipulator::findWhereEqual(string attribute, double value)
     {
         this->printRecord(r);
     }
-    //cout << "Blocks Acessed: " << blocksAccessed << endl;
+    cout << "Blocks Acessed: " << blocksAccessed << endl;
 
     this->closeForReading();
     return 0;
@@ -649,6 +668,7 @@ int orderedManipulator::findWhereEqual(string attribute, string value)
     orderedHeader <char[MAX_ORDERED_FIELD_SIZE]>head;
     vector<FixedRecord> records;
     int attr, blocksAccessed,  i;
+    blocksAccessed = 0;
     bool found = false;
     map<string, int> m = this->createMap();
     attr = m[attribute];
@@ -665,11 +685,11 @@ int orderedManipulator::findWhereEqual(string attribute, string value)
     if (atord == attr){
         this->closeForReading();
         int index = orderedManipulator::binarySearcher(value);
-        
+        blocksAccessed+=this->blockParc;
         this->fileRead.seekg(head.headerSize + index * head.recordSize,ios::beg);
         this->fileRead.read((char *) &record, head.recordSize);
         records.push_back(record);
-
+        blocksAccessed+=1;
         int setBreak = false;
         int i = index;
         while (i< sup){
@@ -677,7 +697,7 @@ int orderedManipulator::findWhereEqual(string attribute, string value)
             i++;
             this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
             this->fileRead.read((char *) &record, head.recordSize);
-
+            blocksAccessed+=1;
             switch (attr)
             {
                 case 1: 
@@ -742,6 +762,7 @@ int orderedManipulator::findWhereEqual(string attribute, string value)
             i--;
             this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
             this->fileRead.read((char *) &record, head.recordSize);
+            blocksAccessed+=1;
             switch (attr)
             {
                 case 1: 
@@ -854,8 +875,9 @@ int orderedManipulator::findWhereEqual(string attribute, string value)
                     return -1;
             }
         }
-    }
     blocksAccessed = i;
+    }
+    
 
     if (!found)
     {
@@ -867,7 +889,7 @@ int orderedManipulator::findWhereEqual(string attribute, string value)
     {
         this->printRecord(r);
     }
-    //cout << "Blocks Acessed: " << blocksAccessed << endl;
+    cout << "Blocks Acessed: " << blocksAccessed << endl;
 
     this->closeForReading();
     return 0;
@@ -882,6 +904,7 @@ int orderedManipulator::findWhereBetween (string attribute, int value1, int valu
     orderedHeader <char[MAX_ORDERED_FIELD_SIZE]>head;
     vector<FixedRecord> records;
     int attr, blocksAccessed,  i;
+    blocksAccessed = 0;
     bool found = false;
     map<string, int> m = this->createMap();
     attr = m[attribute];
@@ -901,6 +924,7 @@ int orderedManipulator::findWhereBetween (string attribute, int value1, int valu
         while (index1 == -1){
             j++;
             index1 = orderedManipulator::binarySearcher(j);
+            blocksAccessed+=this->blockParc;
             this->closeForReading();
             if (j > value2){return -1;} 
         } 
@@ -908,20 +932,21 @@ int orderedManipulator::findWhereBetween (string attribute, int value1, int valu
         while (index2 == -1){
             j--;
             index2 = orderedManipulator::binarySearcher(j);
+            blocksAccessed+=this->blockParc;
             this->closeForReading();
             if (j < value1){return -1;} 
         } 
-        
         this->openForReading();
 
         this->fileRead.seekg(head.headerSize + index1 * head.recordSize,ios::beg);
         this->fileRead.read((char *) &record, head.recordSize);
         records.push_back(record);
-        
+        blocksAccessed+=1;
         if (index1 != index2){
             this->fileRead.seekg(head.headerSize + index2 * head.recordSize,ios::beg);
             this->fileRead.read((char *) &record, head.recordSize);
             records.push_back(record);
+            blocksAccessed+=1;
         }
         
         int setBreak = false;
@@ -932,7 +957,7 @@ int orderedManipulator::findWhereBetween (string attribute, int value1, int valu
             i++;
             this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
             this->fileRead.read((char *) &record, head.recordSize);
-
+            blocksAccessed+=1;
             switch (attr)
             {
                 case 0: /*id*/
@@ -973,6 +998,7 @@ int orderedManipulator::findWhereBetween (string attribute, int value1, int valu
             i--;
             this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
             this->fileRead.read((char *) &record, head.recordSize);
+            blocksAccessed+=1;
             switch (attr)
             {
                 case 0: /*id*/
@@ -1008,12 +1034,16 @@ int orderedManipulator::findWhereBetween (string attribute, int value1, int valu
         }
         i = index1;
         while (i<index2-1){
+            found = true; 
+            cout << i << endl;
             i++;
             this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
             this->fileRead.read((char *) &record, head.recordSize);
+            blockParc+=1;
             if (record.id != -1)
             {
                 records.push_back(record);
+                found = true; 
             }
             
         }
@@ -1050,9 +1080,11 @@ int orderedManipulator::findWhereBetween (string attribute, int value1, int valu
                 default:
                     return -1;
             }
+    
         }
-    }
     blocksAccessed = i;
+    }
+    
     
     if (!found)
     {
@@ -1065,7 +1097,7 @@ int orderedManipulator::findWhereBetween (string attribute, int value1, int valu
         this->printRecord(r);
     }
 
-    //cout << "Blocks Acessed: " << blocksAccessed << endl;
+    cout << "Blocks Acessed: " << blocksAccessed << endl;
    
     this->closeForReading();
     return 0;
@@ -1079,6 +1111,7 @@ int orderedManipulator::findWhereBetween (string attribute, double value1, doubl
     orderedHeader <char[MAX_ORDERED_FIELD_SIZE]>head;
     vector<FixedRecord> records;
     int attr, blocksAccessed,  i;
+    blocksAccessed=0;
     bool found = false;
     map<string, int> m = this->createMap();
     attr = m[attribute];
@@ -1096,10 +1129,10 @@ int orderedManipulator::findWhereBetween (string attribute, double value1, doubl
         int index2 = -1;
         double j = (double) value1;
 
-        //cout << value1 << " " << value2 << endl;
         while (index1 == -1){
             j++;
             index1 = orderedManipulator::binarySearcher(j);
+            blocksAccessed+=this->blockParc;
             this->closeForReading();
             if (j > value2){return -1;} 
         } 
@@ -1107,6 +1140,7 @@ int orderedManipulator::findWhereBetween (string attribute, double value1, doubl
         while (index2 == -1){
             j--;
             index2 = orderedManipulator::binarySearcher(j);
+            blocksAccessed+=this->blockParc;
             this->closeForReading();
             if (j < value1){return -1;} 
         } 
@@ -1115,11 +1149,13 @@ int orderedManipulator::findWhereBetween (string attribute, double value1, doubl
         this->fileRead.seekg(head.headerSize + index1 * head.recordSize,ios::beg);
         this->fileRead.read((char *) &record, head.recordSize);
         records.push_back(record);
+        blockParc+=1;
 
         if (index1 != index2){
             this->fileRead.seekg(head.headerSize + index2 * head.recordSize,ios::beg);
             this->fileRead.read((char *) &record, head.recordSize);
             records.push_back(record);
+            blockParc+=1;
         }
 
         int setBreak = false;
@@ -1129,7 +1165,7 @@ int orderedManipulator::findWhereBetween (string attribute, double value1, doubl
             i++;
             this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
             this->fileRead.read((char *) &record, head.recordSize);
-
+            blockParc+=1;
             switch (attr)
             {
                 case 6: 
@@ -1154,6 +1190,7 @@ int orderedManipulator::findWhereBetween (string attribute, double value1, doubl
             i--;
             this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
             this->fileRead.read((char *) &record, head.recordSize);
+            blockParc+=1;
             switch (attr)
             {
                 case 6: 
@@ -1176,9 +1213,11 @@ int orderedManipulator::findWhereBetween (string attribute, double value1, doubl
             i++;
             this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
             this->fileRead.read((char *) &record, head.recordSize);
+            blockParc+=1;
             if (record.cod_esc != -1)
             {
                 records.push_back(record);
+                found = true; 
             }
             
         }
@@ -1202,8 +1241,8 @@ int orderedManipulator::findWhereBetween (string attribute, double value1, doubl
                     return -1;
             }
         }
-    }
     blocksAccessed = i;
+    }
     
     if (!found)
     {
@@ -1216,7 +1255,7 @@ int orderedManipulator::findWhereBetween (string attribute, double value1, doubl
         this->printRecord(r);
     }
 
-    //cout << "Blocks Acessed: " << blocksAccessed << endl;
+    cout << "Blocks Acessed: " << blocksAccessed << endl;
    
     this->closeForReading();
     return 0;
@@ -1240,6 +1279,7 @@ int orderedManipulator::removeOne(int id)
     if (head.ordered_by == "id"){
         this->closeForReading();
         int index = orderedManipulator::binarySearcher(id);
+        blocksAccessed+=this->blockParc;
         offset = index * sizeof(record);
     
     }
@@ -1261,7 +1301,7 @@ int orderedManipulator::removeOne(int id)
         return -1;
     }
     blocksAccessed += this->updateFreeListInsertDeleted(offset, head);
-    //cout << "Blocks Accessed: " << blocksAccessed << endl;
+    cout << "Blocks Accessed: " << blocksAccessed << endl;
    
     return 0;
 }
@@ -1272,6 +1312,7 @@ int orderedManipulator::removeBetween(string attribute, int value1, int value2)
     orderedHeader <char[MAX_ORDERED_FIELD_SIZE]>head;
     int numDeleted = 0;
     int attr, blocksAccessed,  i;
+    blocksAccessed = 0;
     bool found = false;
     map<string, int> m = this->createMap();
     attr = m[attribute];
@@ -1291,6 +1332,7 @@ int orderedManipulator::removeBetween(string attribute, int value1, int value2)
         while (index1 == -1){
             j++;
             index1 = orderedManipulator::binarySearcher(j);
+            blocksAccessed+=this->blockParc;
             this->closeForReading();
             if (j > value2){return -1;} 
         } 
@@ -1298,6 +1340,7 @@ int orderedManipulator::removeBetween(string attribute, int value1, int value2)
         while (index2 == -1){
             j--;
             index2 = orderedManipulator::binarySearcher(j);
+            blocksAccessed+=this->blockParc;
             this->closeForReading();
             if (j < value1){return -1;} 
         } 
@@ -1307,11 +1350,12 @@ int orderedManipulator::removeBetween(string attribute, int value1, int value2)
 
         this->updateFreeListInsertDeleted(index1 * sizeof(record), head);
         numDeleted++;
-
+        blocksAccessed+=1;
         
         if (index1 != index2){
             this->updateFreeListInsertDeleted(index2 * sizeof(record), head);
             numDeleted++;
+            blocksAccessed+=1;
         }
         
         int setBreak = false;
@@ -1322,7 +1366,7 @@ int orderedManipulator::removeBetween(string attribute, int value1, int value2)
             i++;
             this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
             this->fileRead.read((char *) &record, head.recordSize);
-
+            blocksAccessed+=1;
             switch (attr)
             {
                 case 0: /*id*/
@@ -1366,6 +1410,7 @@ int orderedManipulator::removeBetween(string attribute, int value1, int value2)
             i--;
             this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
             this->fileRead.read((char *) &record, head.recordSize);
+            blocksAccessed+=1;
             switch (attr)
             {
                 case 0: /*id*/
@@ -1407,6 +1452,7 @@ int orderedManipulator::removeBetween(string attribute, int value1, int value2)
             i++;
             this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
             this->fileRead.read((char *) &record, head.recordSize);
+            blocksAccessed+=1;
             if (record.id != -1)
             {
                 this->updateFreeListInsertDeleted(i * sizeof(record), head);
@@ -1451,8 +1497,8 @@ int orderedManipulator::removeBetween(string attribute, int value1, int value2)
                     return -1;
             }
         }
-    }
     blocksAccessed = i;
+    }
     
     cout << "Blocks Accessed: " << blocksAccessed << endl;
     cout << "Rows deleted: " << numDeleted << endl;
@@ -1467,6 +1513,7 @@ int orderedManipulator::removeBetween(string attribute, double value1, double va
     orderedHeader <char[MAX_ORDERED_FIELD_SIZE]>head;
     int numDeleted = 0 ;
     int attr, blocksAccessed,  i;
+    blocksAccessed = 0;
     bool found = false;
     map<string, int> m = this->createMap();
     attr = m[attribute];
@@ -1488,6 +1535,7 @@ int orderedManipulator::removeBetween(string attribute, double value1, double va
         while (index1 == -1){
             j++;
             index1 = orderedManipulator::binarySearcher(j);
+            blocksAccessed+=1;
             this->closeForReading();
             if (j > value2){return -1;} 
         } 
@@ -1495,6 +1543,7 @@ int orderedManipulator::removeBetween(string attribute, double value1, double va
         while (index2 == -1){
             j--;
             index2 = orderedManipulator::binarySearcher(j);
+            blocksAccessed+=1;
             this->closeForReading();
             if (j < value1){return -1;} 
         } 
@@ -1502,10 +1551,12 @@ int orderedManipulator::removeBetween(string attribute, double value1, double va
 
         this->updateFreeListInsertDeleted(i * sizeof(record), head);
         numDeleted++;
+        blocksAccessed+=1;
 
         if (index1 != index2){
         this->updateFreeListInsertDeleted(i * sizeof(record), head);
         numDeleted++;
+        blocksAccessed+=1;
         }
 
         int setBreak = false;
@@ -1515,7 +1566,7 @@ int orderedManipulator::removeBetween(string attribute, double value1, double va
             i++;
             this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
             this->fileRead.read((char *) &record, head.recordSize);
-
+            blocksAccessed+=1;
             switch (attr)
             {
                 case 6: 
@@ -1541,6 +1592,7 @@ int orderedManipulator::removeBetween(string attribute, double value1, double va
             i--;
             this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
             this->fileRead.read((char *) &record, head.recordSize);
+            blocksAccessed+=1;
             switch (attr)
             {
                 case 6: 
@@ -1564,6 +1616,7 @@ int orderedManipulator::removeBetween(string attribute, double value1, double va
             i++;
             this->fileRead.seekg(head.headerSize + i * head.recordSize,ios::beg);
             this->fileRead.read((char *) &record, head.recordSize);
+            blocksAccessed+=1;
             if (record.cod_esc != -1)
             {
                 this->updateFreeListInsertDeleted(i * sizeof(record), head);
@@ -1592,8 +1645,8 @@ int orderedManipulator::removeBetween(string attribute, double value1, double va
                     return -1;
             }
         }
-    }
     blocksAccessed = i;
+    }
 
 
     

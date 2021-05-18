@@ -48,5 +48,7 @@ class orderedManipulator : public FileManipulator
         int binarySearcher(double value);
         int binarySearcher(string value);
 
+        int blockParc; 
+
 };
 #endif
