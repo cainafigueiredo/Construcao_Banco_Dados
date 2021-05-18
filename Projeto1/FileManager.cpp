@@ -20,13 +20,18 @@ int FileManager::loadFile(string filePath) {
 
 	// Se chegou aqui, é porque deu tudo certo. 
 	// Vamos inicializar os atributos baseado nas informações do arquivo de registros carregado
-	this->fileName = filePath;
+	this->fileName = filePath; 
+
 	switch(this->fileOrganization)
 	{
 		case 0:
 			this->fm = new FixedHeapManipulator(this->fileName);
 			break;
+		case 3:
+			this->fm = new HashManipulator(this->fileName);
+			break;
 	}
+	this->close();
 
 	return 0;
 }
@@ -62,6 +67,8 @@ int FileManager::close() {
 	return 0;
 }
 
-void FileManager::info() {
-	cout << this->fileName << "\t" << this->fileOrganization << "\n";
+void FileManager::recordsFileInfo() {
+	cout << "File Path: " << this->fileName << endl;
+	cout << "File Organization: " << this->fileOrganization << endl;
+	this->fm->getHeaderInfo();
 }

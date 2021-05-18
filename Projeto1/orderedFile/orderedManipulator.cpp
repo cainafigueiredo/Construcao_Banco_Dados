@@ -1,9 +1,143 @@
 #include "orderedManipulator.h"
+#include "orderedHeader.h"
+#include <cstring>
+#include <vector>
+#include <algorithm>
+
+vector<wrapper> make_wrapper_buffer(FixedRecord *buff,int order,int size_buff)
+{
+    vector<wrapper> vec_wp;
+    int i = 0;
+    for(;i<size_buff;i++)
+    {
+        wrapper wp(order,&buff[i]);
+        vec_wp.push_back(wp);
+    }
+    // delete buff;
+    return vec_wp;
+}
+
+//retorna true quando a.campo < b.campo
+bool compare_records(wrapper &a,wrapper &b)
+{   
+    bool resultado = false;
+    switch(a.compare_by)
+    {
+        case 0:    
+            resultado = (a.r->id < b.r->id);   
+            break;
+        case 1:
+            resultado = (strcmp(a.r->nomedep,b.r->nomedep) <= 0);
+            break;
+        case 2:
+            resultado = (strcmp(a.r->de,b.r->de) <= 0);
+            cout<<"LEFT: "<<a.r->de<<"|RIGHT: "<<b.r->de<<"|result "<<resultado<<endl;
+            break;
+        case 3:
+            resultado =  (strcmp(a.r->distr,b.r->distr) <= 0) ;
+            break;
+        case 4:
+            resultado = (strcmp(a.r->mun,b.r->mun) <=0 );
+            break;
+        case 5:
+            resultado = (a.r->tipoesc <= b.r->tipoesc);
+            break;
+        case 6:
+            resultado = (a.r->cod_esc <= b.r->cod_esc);
+            break;
+        case 7:
+            resultado = (strcmp(a.r->nomesc,b.r->nomesc) <= 0);
+            break;
+        case 8:
+            resultado = (strcmp(a.r->ds_pais,b.r->ds_pais) <= 0);
+            break;
+        case 9:
+            resultado = (a.r->n_alunos <= b.r->n_alunos);
+            break;
+    }
+    return resultado;
+}
+
+void orderedManipulator::writeBufferToTempFile(vector<wrapper> buffer,orderedHeader<char[MAX_ORDERED_FIELD_SIZE]> *head)
+{
+    this->createTempFile();
+    this->openTempFileWriting();
+    this->tempFile.seekp(0, ios::beg);
+    if(head)
+    {
+        this->tempFile.write( (char *) head, sizeof(orderedHeader<char[MAX_ORDERED_FIELD_SIZE]>));
+        cout<<head->ordered_by<<endl;
+    }
+    for(int i=0; i < buffer.size(); i++){
+        FixedRecord *cur = buffer[i].r;
+        this->tempFile.write( (char *) cur, sizeof(FixedRecord));
+        cout<<cur->de<<endl;
+    }
+    this->closeTempFileWriting();
+    remove (this->fileName.c_str());
+    rename ((this->fileName + ".temp").c_str(), this->fileName.c_str());
+}
+
+void orderedManipulator()
+{
+
+}
 
 void orderedManipulator::ordenateFile()
 {
-    orderedHeader<char[MAX_ORDERED_FIELD_SIZE]> head;    
-    
+    orderedHeader<char[MAX_ORDERED_FIELD_SIZE]> head; 
+    this->openForReading();   
+    this->fileRead.read((char *) &head, sizeof(head));
+    int total = int(MAX_SIZE_IN_MEM/head.recordSize);
+    FixedRecord *buffer = new FixedRecord[total];
+    if(MAX_SIZE_IN_MEM >= head.recordsAmount * head.recordSize )
+    {   //LÊ E ORDENA NA RAM
+        cout<<"Comecando"<<endl;
+        for (int i = 0; i < head.recordsAmount; i++)
+        {   
+            this->fileRead.read((char *) &buffer[i], sizeof(FixedRecord));   
+            // this->printRecord(buffer[i]);
+        }
+        this->closeForReading();
+        cout<<"ok aqui"<<endl;
+        cout<<&buffer[0]<<endl;
+        vector<wrapper> wp = make_wrapper_buffer(buffer,this->ordered_by,head.recordsAmount);
+        this->printSchema();
+        cout<<"Finished reading recs"<<endl;
+        sort(wp.begin(), wp.end(), compare_records);
+        cout<<"Finished sorting recs"<<endl;
+        // for (int i = 0; i < head.recordsAmount; i++)
+        // {   
+        //     this->printRecord(*wp[i].r);
+        // }
+        this->writeBufferToTempFile(wp,&head);
+    }
+
+}
+
+FixedRecord *orderedManipulator::findNext()
+{
+    FixedRecord *record = NULL;
+    this->openForReading();
+    this->fileRead.seekg(this->currPos,ios::beg);
+    if(this->currPos == 0)
+    {
+        orderedHeader <char[MAX_ORDERED_FIELD_SIZE]> head;
+        this->fileRead.read((char *) &head, sizeof(head));
+        this->currPos = this->fileRead.tellg();
+        cout<<head.extension_file<<"| tellg: "<<this->currPos<<endl;
+    }
+    if(!this->fileRead.eof())
+    {
+        record = new FixedRecord;
+        this->fileRead.read((char *) record, sizeof(FixedRecord));
+        this->currPos = this->fileRead.tellg(); 
+        // cout<<record->de<<"| tellg: "<<this->currPos<<endl;
+    }
+    else
+        this->currPos = 0;
+    this->closeForReading();
+    return record;
 }
 
 int orderedManipulator::printRecord(FixedRecord r)
@@ -2059,6 +2193,18 @@ int orderedManipulator::reorganize()
     rename ((this->fileName + ".temp").c_str(), this->fileName.c_str());
     
     cout << "Accessed Blocks: " << accessedBlocks << endl;
+    return 0;
+}
+
+
+int orderedManipulator::createTempFile(string fileName)
+{
+    this->tempFile.open(fileName + ".temp", ios::binary | ios::out);
+    if (!this->tempFile.good())
+    {
+        return -1;
+    }
+    this->tempFile.close();
     return 0;
 }
 

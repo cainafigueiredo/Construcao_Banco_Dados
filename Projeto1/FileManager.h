@@ -5,6 +5,7 @@
 #include <fstream>
 #include "FileManipulator.h"
 #include "fixedHeap/FixedHeapManipulator.h"
+#include "hashFile/HashManipulator.h"
 
 using namespace std;
 
@@ -24,6 +25,8 @@ class FileManager
         int getFileOrganization();
         int close();
 
-        void info();
+
+        void recordsFileInfo();
+
 };
 #endif

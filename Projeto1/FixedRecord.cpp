@@ -1,19 +1,23 @@
 #include "FixedRecord.h"
 
-int FixedRecord::readCSVLine(string line)
+int FixedRecord::readCSVLine(string line, bool hasId)
 {
     char str[line.size()];
-    strcpy(str, line.c_str());
-    strcpy(this->nomedep, strtok(str, ","));
-    strcpy(this->de, strtok(NULL, ","));
-    strcpy(this->distr, strtok(NULL, ","));
-    strcpy(this->mun, strtok(NULL, ","));
+    strncpy(str, line.c_str(), line.size());
+    if (hasId) {
+        this->id = strtoul(strtok(str, ","), NULL, 10);
+        strncpy(this->nomedep, strtok(NULL, ","), MAX_STRING_SIZE);
+    } else {
+        strncpy(this->nomedep, strtok(str, ","), MAX_STRING_SIZE);
+    }
+    strncpy(this->de, strtok(NULL, ","), MAX_STRING_SIZE);
+    strncpy(this->distr, strtok(NULL, ","), MAX_STRING_SIZE);
+    strncpy(this->mun, strtok(NULL, ","), MAX_STRING_SIZE);
     this->tipoesc = strtoul(strtok(NULL, ","), NULL, 10);
     this->cod_esc = strtod(strtok(NULL, ","), NULL);
-    strcpy(this->nomesc, strtok(NULL, ","));
-    strcpy(this->ds_pais, strtok(NULL, ","));
+    strncpy(this->nomesc, strtok(NULL, ","), MAX_STRING_SIZE);
+    strncpy(this->ds_pais, strtok(NULL, ","), MAX_STRING_SIZE);
     this->n_alunos = strtoul(strtok(NULL, "\0"), NULL, 10);
-
     return 0;
 }
 
@@ -36,4 +40,22 @@ int FixedRecord::makeDeleted()
 int FixedRecord::isDeleted()
 {
     return this->id == -1;
+}
+
+void FixedRecord::getRecordFieldsAsCSV(char * out, int numberOfCharacters, bool hasId) {
+    stringstream recordString;
+    if (hasId) {
+        recordString << this->id << ","; 
+    }
+    recordString << this->nomedep << ",";
+    recordString << this->de << ","; 
+    recordString << this->distr << ",";
+    recordString << this->mun << ",";
+    recordString << this->tipoesc << ",";
+    recordString << this->cod_esc << ",";
+    recordString << this->nomesc << ",";
+    recordString << this->ds_pais << ",";
+    recordString << this->n_alunos << "\n";
+
+    strncpy(out, recordString.str().c_str(), numberOfCharacters);
 }
