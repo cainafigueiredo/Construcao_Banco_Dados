@@ -4,7 +4,7 @@
 #include "../FixedRecord.h"
 #include "../FileCreator.h"
 #include "../FileHeader.h"
-#define MAX_ORDERED_FIELD_SIZE 128
+#define MAX_ORDERED_FIELD_SIZE 32
 using namespace std;
 
 template <class T>

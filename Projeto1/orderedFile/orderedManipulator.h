@@ -58,6 +58,13 @@ class orderedManipulator : public FileManipulator
         vector<int>*total_per_file);
         FixedRecord* pickOrdered(map<int,int>*recToFile,vector<ifstream*>*inputFiles,
         vector<wrapper>*wp,int *totalOpenedFiles,vector<int>*total_per_file);
+        int blockParc;
+        int comparator (int a, int b);
+        int comparator (string a, string b);
+        int comparator (double a, double b);
+        int binarySearcher(int value);
+        int binarySearcher(double value);
+        int binarySearcher(string value);
         int printRecord(FixedRecord r);
         int insertHeader(orderedHeader<char[MAX_ORDERED_FIELD_SIZE]> head);
 
